@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   "dependencies": {
     "console-stamp": "^3.1.1",
     "dotenv": "^16.0.3",
+    "graphql": "^15.5.1",
     "graphql-request": "^5.2.0",
     "node-cron": "^3.0.2",
     "telebot": "^1.4.1",
