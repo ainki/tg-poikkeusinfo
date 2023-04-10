@@ -1,0 +1,28 @@
+{
+  "name": "ainki-tg-poikkeusinfo",
+  "version": "0.0.10",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ainki/ainki-tg-poikkeusinfo.git"
+  },
+  "author": "ainki",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ainki/ainki-tg-poikkeusinfo/issues"
+  },
+  "homepage": "https://github.com/ainki/ainki-tg-poikkeusinfo#readme",
+  "dependencies": {
+    "console-stamp": "^3.1.1",
+    "dotenv": "^16.0.3",
+    "graphql-request": "^5.2.0",
+    "node-cron": "^3.0.2",
+    "telebot": "^1.4.1",
+    "moment": "^2.29.3",
+    "lokijs": "^1.5.12"
+  }
+}
