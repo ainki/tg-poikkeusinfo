@@ -101,6 +101,7 @@ async function tarkistaPoikkeukset(tila) {
                 poikkeusViestiListaus(alertDescription, msgId, alertEndDate);
                 if (alertSeverity === "SEVERE") {
                     const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
+                    console.info('[HSL Alert] Viesti pinnattu')
                 }
             }
         }
@@ -130,7 +131,7 @@ async function poikkeusViestiPoisto() {
         // console.debug("Poistettava viesti: " + poistettavaViesti);
         // console.debug("Poistettava tripId: " + poistettavaAlertDescription);
         poikkeusViestit.chain().find({ message_id: poistettavaViesti }).remove();
-        bot.deleteMessage(channels.poikkeusChannelID, poistettavaViesti).then(re => {
+        bot.deleteMessage(config.poikkeusChannelID, poistettavaViesti).then(re => {
             // console.debug("Poistettu viesti: " + poistettavaViesti);
         }).catch(err => {
             console.error(err);
