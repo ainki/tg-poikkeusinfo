@@ -121,7 +121,7 @@ async function poikkeusViestiPoisto() {
     // console.debug('[HSL Alert] Tarkistetaan poistettavia poikkeusviestejä');
 
     var poistettavatViestit = poikkeusViestit.chain()
-        .find({ cancelEndDate: { $lt: moment().unix() } })
+        .find({ alertEndDate: { $lt: moment().unix() } })
         .data();
 
     // Käydää jokainen poistettava läpi ja poistetaan viesti
