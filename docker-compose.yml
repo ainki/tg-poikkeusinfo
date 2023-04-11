@@ -5,10 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        token:
+        token: 
         TZ: Europe/Helsinki
-        digitransitApiKey:
-    container_name: tg-feedbot
+        digitransitApiKey: 
+        channelId: 
+    container_name: tg-poikkeusinfo
     image: ainki/tg-poikkeusinfo:latest
     restart: always
     volumes:
