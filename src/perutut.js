@@ -5,8 +5,8 @@ const bot = require('../bot');
 const config = require('../config');
 // npm
 const { request } = require('graphql-request')
-var moment = require('moment');
 var loki = require('lokijs');
+var moment = require('moment');
 moment.locale('fi-FI');
 
 // Database
@@ -22,18 +22,19 @@ var db = new loki('./data/perutut.db',
 
 // implement the autoloadback referenced in loki constructor
 function databaseInitialize() {
-    console.log('Ladataan tietokanta...')
+    console.info('[HSL Cancelled] Ladataan tietokanta...')
     peruttuViestit = db.getCollection("perututuViestit");
     if (peruttuViestit === null) {
-        console.info('Tietokantaa ei löytynyt, luodaan uusi...')
+        console.info('[HSL Cancelled] Tietokantaa ei löytynyt, luodaan uusi...')
         peruttuViestit = db.addCollection("perututuViestit");
     }
 
     // kick off any program logic or start listening to external events
     tarkistaPerutut();
+    console.info('[HSL Cancelled] Tietokanta ladattu:')
     console.log(peruttuViestit.data)
 }
-// var peruttuViestit = db.addCollection('perututuViestit');
+
 let listaPerutuista = [];
 
 // Poikkeusten hakufunktio
@@ -58,9 +59,8 @@ async function tarkistaPerutut(tila) {
         }
       }`
 
-    // return request(config.digitransitAPILink, query)
-    // .then(function (data) {
     const data = await request(config.digitransitAPILink, query);
+    // Datan käsittely
     let perututVuorot = data.cancelledTripTimes;
     // Käy läpi jokaisen perutun vuoron
     for (i = 0; i < perututVuorot.length; i += 1) {
@@ -104,7 +104,7 @@ async function tarkistaPerutut(tila) {
                         break;
                 }
             }
-            console.log('[HSL Peruttu] ' + lahetettavaViesti); // Logataan alert konsoliin
+            console.log('[HSL Cancelled] ' + lahetettavaViesti); // Logataan alert konsoliin
 
             // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
             if (tila == 1) {

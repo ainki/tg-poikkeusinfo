@@ -15,26 +15,32 @@ function startMessage() {
 startMessage()
 
 if (config.enablePerutut == true) {
-    // Tarkistaa poikkeukset joka minuutti
+    // Tarkistaa perutut joka minuutti
     cron.schedule('* * * * *', () => {
         perutut.tarkistaPerutut(1)
             .catch(err => {
                 console.error(err);
             });
     });
+
     // Tarkistaa poistettavat viestit joka viides minuutti
-    cron.schedule('*/2 * * * *', () => {
+    cron.schedule('*/5 * * * *', () => {
         perutut.perututViestiPoisto();
     });
 }
 
 if (config.enablePoikkeukset == true) {
-    // Käynnistyksen yhteydessä tehtävä haku
-    poikkeukset.tarkistaPoikkeukset();
-
     // Tarkistaa poikkeukset joka toinen minuutti
     cron.schedule('*/2 * * * *', () => {
-        poikkeukset.tarkistaPoikkeukset(1);
+        poikkeukset.tarkistaPoikkeukset(1)
+            .catch(err => {
+                console.error(err);
+            });
+    });
+
+    // Tarkistaa poistettavat viestit joka viides minuutti
+    cron.schedule('*/5 * * * *', () => {
+        poikkeukset.poikkeusViestiPoisto();
     });
 }
 
