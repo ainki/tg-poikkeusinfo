@@ -16,7 +16,7 @@ startMessage()
 
 if (config.enablePerutut == true) {
     // Käynnistyksen yhteydessä tehtävä haku
-    perutut.tarkistaPerutut();
+    perutut.databaseInitialize();
 
     // Tarkistaa poikkeukset joka minuutti
     cron.schedule('* * * * *', () => {

@@ -8,15 +8,41 @@ const { request } = require('graphql-request')
 var moment = require('moment');
 var loki = require('lokijs');
 moment.locale('fi-FI');
+
 // Database
-var db = new loki('../data/perutut.db');
-var peruttuViestit = db.addCollection('perututuViestit');
+var peruttuViestit
+var db = new loki('./data/perutut.db',
+    {
+        autoload: true,
+        autosave: true,
+        autosaveInterval: 30000,
+        autoloadCallback: databaseInitialize,
+    }
+);
+
+// implement the autoloadback referenced in loki constructor
+async function databaseInitialize() {
+    console.log('Ladataan tietokanta...')
+    peruttuViestit = db.getCollection("perututuViestit");
+    if (peruttuViestit === null) {
+        peruttuViestit = db.addCollection("perututuViestit");
+    }
+
+    console.log(peruttuViestit.data)
+
+    // kick off any program logic or start listening to external events
+    tarkistaPerutut();
+}
+// var peruttuViestit = db.addCollection('perututuViestit');
 let listaPerutuista = [];
 
+
 // Lataa tietokanta käynnistyksen yhteydessä
-db.loadDatabase({}, function () {
-    console.info('Tietokanta ladattu');
-});
+// db.loadDatabase({}, function () {
+//     peruttuViestit = db.loadCollection('perututuViestit');
+//     console.info('Tietokanta ladattu');
+//     console.log(peruttuViestit.data)
+// });
 
 
 // Poikkeusten hakufunktio
@@ -49,16 +75,16 @@ async function tarkistaPerutut(tila) {
             for (i = 0; i < perututVuorot.length; i += 1) {
                 // Tarkistaa onko peruttu vuoro jo olemassa
                 if (listaPerutuista.indexOf(perututVuorot[i].trip.id) === -1) {
-                    var tripId = perututVuorot[i].trip.id;
+                    // var tripId = perututVuorot[i].trip.id;
                     // Lisää uuden perutun peruttuihin, jotta se ei toistu 
-                    listaPerutuista.push(tripId);
+                    listaPerutuista.push(perututVuorot[i].trip.id);
                     // Ajan käsittely
                     var departureTimeNum = Number(perututVuorot[i].scheduledDeparture);
                     var serviceDayNum = Number(perututVuorot[i].serviceDay);
 
                     // var alertEndDate = departureTimeNum + 10800 + moment().unix();
-                    var alertEndDate = departureTimeNum + 10800 + serviceDayNum;
-                    // var alertEndDate = departureTimeNum + 180 + serviceDayNum;
+                    // var alertEndDate = departureTimeNum + 10800 + serviceDayNum;
+                    var alertEndDate = departureTimeNum + 180 + serviceDayNum;
                     // Viesti
                     var lahetettavaViesti;
                     // Moment
@@ -99,7 +125,7 @@ async function tarkistaPerutut(tila) {
                     // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
                     if (tila == 1) {
                         bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti).then(re => {
-                            perututVuorotViestiLista(tripId, re.message_id, alertEndDate);
+                            perututVuorotViestiLista(perututVuorot[i].trip.id, re.message_id, Number(perututVuorot[i].scheduledDeparture) + Number(perututVuorot[i].serviceDay) + 180, lahetettavaViesti);
                         }).catch(err => {
                             console.error(err);
                         })
@@ -113,39 +139,15 @@ async function tarkistaPerutut(tila) {
         });
 }
 
-function perututVuorotViestiLista(tripId, msgId, effectiveEndDate) {
+function perututVuorotViestiLista(tripId, msgId, effectiveEndDate, messageBody) {
     peruttuViestit.insert({
         cancelTripId: tripId,
         cancelMsgId: msgId,
-        cancelEndDate: effectiveEndDate
+        cancelEndDate: effectiveEndDate,
+        cancelMessage: messageBody
     });
     db.saveDatabase();
 }
-
-async function perututVuorotViestiSiivous() {
-
-    // console.debug('[HSL Peruttu] Tarkistetaan poistettavia peruttu viestejä');
-
-    var poistettavatViestit = peruttuViestit.chain()
-        .find({ cancelEndDate: { $lt: moment().unix() } })
-        // .where(function (obj) { return obj.cancelEndDate < moment().unix() })
-        .data();
-
-    // console.debug(poistettavatViestit);
-
-    for (i = 0; i < poistettavatViestit.length; i += 1) {
-        var poistettavaViestiID = poistettavatViestit[i].cancelMsgId;
-        console.debug("Poistettava viesti: " + poistettavaViestiID);
-        bot.deleteMessage(config.poikkeusChannelID, poistettavaViestiID).then(re => {
-            peruttuViestit.chain().find({ cancelMsgId: poistettavaViestiID }).remove();
-            console.debug("Poistettu viesti: " + poistettavaViestiID);
-        }).catch(err => {
-            console.error(err);
-        })
-    }
-
-}
-
 
 async function perututViestiPoisto() {
     // console.debug('[HSL Peruttu] Tarkistetaan poistettavia peruttu viestejä');
@@ -171,10 +173,13 @@ async function perututViestiPoisto() {
             }
         })
     }
+    console.debug('Tietokanta poiston jälkeen: ')
+    console.debug(peruttuViestit.data)
 }
 
 
 module.exports = {
     tarkistaPerutut,
-    perututViestiPoisto
+    perututViestiPoisto,
+    databaseInitialize
 }
