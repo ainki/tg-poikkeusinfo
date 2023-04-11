@@ -15,15 +15,15 @@ function startMessage() {
 startMessage()
 
 if (config.enablePerutut == true) {
-    // Käynnistyksen yhteydessä tehtävä haku
-    perutut.databaseInitialize();
-
     // Tarkistaa poikkeukset joka minuutti
     cron.schedule('* * * * *', () => {
-        perutut.tarkistaPerutut(1);
+        perutut.tarkistaPerutut(1)
+            .catch(err => {
+                console.error(err);
+            });
     });
     // Tarkistaa poistettavat viestit joka viides minuutti
-    cron.schedule('*/5 * * * *', () => {
+    cron.schedule('*/2 * * * *', () => {
         perutut.perututViestiPoisto();
     });
 }

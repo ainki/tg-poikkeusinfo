@@ -1,6 +1,6 @@
 {
   "name": "ainki-tg-poikkeusinfo",
-  "version": "0.0.11",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -22,9 +22,9 @@
     "dotenv": "^16.0.3",
     "graphql": "^15.5.1",
     "graphql-request": "^5.2.0",
-    "node-cron": "^3.0.2",
-    "telebot": "^1.4.1",
+    "lokijs": "^1.5.12",
     "moment": "^2.29.3",
-    "lokijs": "^1.5.12"
+    "node-cron": "^3.0.2",
+    "node-telegram-bot-api": "^0.61.0"
   }
 }
