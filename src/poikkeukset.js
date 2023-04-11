@@ -136,7 +136,7 @@ async function poikkeusViestiPoisto() {
         }).catch(err => {
             console.error(err);
             if (err.code === 400) {
-                console.error("Poistettava viesti ei löytynyt, poistetaan tietokannasta");
+                console.error("[HSL Alert] Poistettava viesti ei löytynyt, poistetaan tietokannasta");
                 poikkeusViestit.chain().find({ message_id: poistettavaViesti }).remove();
             }
         })
