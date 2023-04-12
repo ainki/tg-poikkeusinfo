@@ -73,7 +73,7 @@ async function tarkistaPerutut (tila) {
       var departureTimeNum = Number(perututVuorot[i].scheduledDeparture)
       var serviceDayNum = Number(perututVuorot[i].serviceDay)
 
-      var alertEndDate = departureTimeNum + 7200 + serviceDayNum  // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
+      var alertEndDate = departureTimeNum + 7200 + serviceDayNum // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
       // var alertEndDate = departureTimeNum + 180 + serviceDayNum // Kolme minuuttia (testausta varten)
 
       // Viesti
