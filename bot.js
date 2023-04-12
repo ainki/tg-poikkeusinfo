@@ -1,21 +1,14 @@
 //
-//  PoikkeusinfoBot
+//  Poikkeusinfo Telegram feed
 //
 
-//NPM
-// const TeleBot = require('telebot');
-const TelegramBot = require('node-telegram-bot-api');
+// npm
+const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
 
+// Telegram bot token
+const token = process.env.token
 
+const bot = new TelegramBot(token, { polling: false })
 
-//Heroku token
-const token = process.env.token;
-
-//BotToken
-const bot = new TelegramBot(
-    token,
-    {polling: false}
-);
-
-module.exports = bot;
+module.exports = bot
