@@ -38,17 +38,20 @@ const poikkeukset = []
 // Hae poikeukset
 async function tarkistaPoikkeukset (tila) {
   // graphQL hakulause
-  const query = `{
-    alerts {
-      alertHeaderText
-      alertDescriptionText
-      alertSeverityLevel
-      effectiveStartDate
-      effectiveEndDate
-      route {
-    mode
-    }
-    }
+  const query = `
+    {
+      alerts {
+        id
+        alertHeaderText
+        alertDescriptionText
+        alertEffect
+        alertSeverityLevel
+        effectiveStartDate
+        effectiveEndDate
+        route {
+          mode
+        }
+      }
     }`
 
   const data = await request(config.digitransitAPILink, query)
@@ -62,6 +65,7 @@ async function tarkistaPoikkeukset (tila) {
       poikkeukset.push(alerts[i].alertDescriptionText)
 
       var lahetettavaViesti
+      let alertId = alerts[i].id
       var alertDescription = alerts[i].alertDescriptionText // Poikkeuksen kuvaus
       var alertSeverity = alerts[i].alertSeverityLevel // Poikkeuksen tärkeys
       var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
@@ -96,7 +100,7 @@ async function tarkistaPoikkeukset (tila) {
       if (tila === 1) {
         const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
         const msgId = lahetettyViesti.message_id
-        poikkeusViestiListaus(alertDescription, msgId, alertEndDate)
+        poikkeusViestiListaus(alertId, alertDescription, msgId, alertEndDate)
         if (alertSeverity === 'SEVERE') {
           const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
           console.info('[HSL Alert] Viesti ' + pinned.message_id + ' pinnattu')
@@ -106,13 +110,18 @@ async function tarkistaPoikkeukset (tila) {
   }
 }
 
-function poikkeusViestiListaus (description, msgId, endDate) {
+function poikkeusViestiListaus (id, description, msgId, endDate) {
   poikkeusViestit.insert({
+    alertId: id,
     alertDescription: description,
     alertMessageId: msgId,
     alertEndDate: endDate
   })
   db.saveDatabase()
+}
+
+async function poikkeusViestiUpdate () {
+  
 }
 
 async function poikkeusViestiPoisto () {
