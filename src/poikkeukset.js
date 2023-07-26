@@ -57,12 +57,14 @@ async function tarkistaPoikkeukset (tila) {
   const data = await request(config.digitransitAPILink, query)
   // Datan käsittely
   const alerts = data.alerts
+  // Tarkistaa onko päivitettäviä poikkeuksia
+  poikkeusViestiUpdate(alerts)
   // Menee jokaisen poikkeuksen läpi
   for (let i = 0; i < alerts.length; i += 1) {
     // Tarkistaa onko poikkeus jo olemassa
-    if (poikkeukset.indexOf(alerts[i].id) === -1) {
+    if (poikkeukset.indexOf(alerts[i].alertDescriptionText) === -1) {
       // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
-      poikkeukset.push(alerts[i].id)
+      poikkeukset.push(alerts[i].alertDescriptionText)
 
       // var lahetettavaViesti
       const alertId = alerts[i].id
@@ -88,8 +90,6 @@ async function tarkistaPoikkeukset (tila) {
       }
     }
   }
-  // Tarkistaa onko päivitettäviä poikkeuksia
-  poikkeusViestiUpdate(alerts)
 }
 
 function poikkeusViestiBuild (alertsi) {
@@ -138,6 +138,7 @@ async function poikkeusViestiUpdate (alerts) {
         // console.log(kaikkiPoikkeusViestit[y].alertId + ' = ' + alerts[x].id)
         if (kaikkiPoikkeusViestit[y].alertDescription !== alerts[x].alertDescriptionText) {
           console.log('Not same text, update text')
+          poikkeukset.push(alerts[x].alertDescriptionText)
           var editoituViesti = poikkeusViestiBuild(alerts[x])
           bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId })
         }
