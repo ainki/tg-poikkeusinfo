@@ -123,7 +123,7 @@ function perututVuorotViestiLista (tripId, msgId, effectiveEndDate, messageBody)
     cancelEndDate: effectiveEndDate,
     cancelMessage: messageBody
   })
-  db.saveDatabase()
+  // db.saveDatabase()
 }
 
 function perututViestiPoisto () {
