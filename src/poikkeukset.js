@@ -92,6 +92,7 @@ async function tarkistaPoikkeukset (tila) {
   }
 }
 
+// Viestin rakennus
 function poikkeusViestiBuild (alertsi) {
   var lahetettavaViesti
   // Tarkastaa onko poikkeuksella kulkuneuvo ja rakentaa viestin
@@ -119,6 +120,7 @@ function poikkeusViestiBuild (alertsi) {
   return lahetettavaViesti
 }
 
+// Tietokantaan tieto
 function poikkeusViestiListaus (id, description, msgId, endDate) {
   poikkeusViestit.insert({
     alertId: id,
@@ -129,22 +131,25 @@ function poikkeusViestiListaus (id, description, msgId, endDate) {
   // db.saveDatabase()
 }
 
+// Alertin päivitys
 async function poikkeusViestiUpdate (alerts) {
   // console.log('poikkeusViestiUpdate')
   var kaikkiPoikkeusViestit = poikkeusViestit.chain().data()
   for (let y = 0; y < kaikkiPoikkeusViestit.length; y += 1) {
     for (let x = 0; x < alerts.length; x += 1) {
       if (kaikkiPoikkeusViestit[y].alertId === alerts[x].id) {
-        // console.log(kaikkiPoikkeusViestit[y].alertId + ' = ' + alerts[x].id)
+        // Jos tietokannan ja queryn alertDescription text eroaa
         if (kaikkiPoikkeusViestit[y].alertDescription !== alerts[x].alertDescriptionText) {
           // console.log('Not same text, update text')
           console.log('[HSL Update Alert] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
+          // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
           poikkeukset.push(alerts[x].alertDescriptionText)
+          // Rakentaa viestin
           var editoituViesti = poikkeusViestiBuild(alerts[x])
-          console.log(editoituViesti)
+          // Muokkaa viestin
           bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId, parse_mode: 'HTML' })
-          // Update db
-          poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function(obj) {
+          // Päivittää tekstin tietokantaan
+          poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
             obj.alertDescription = alerts[x].alertDescriptionText
           })
         }
