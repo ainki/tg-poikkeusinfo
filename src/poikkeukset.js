@@ -14,7 +14,7 @@ var db = new Loki('./data/poikkeus.db',
   {
     autoload: true,
     autosave: true,
-    autosaveInterval: 60000,
+    autosaveInterval: 10000,
     autoloadCallback: databaseInitialize
   }
 )
@@ -59,13 +59,13 @@ async function tarkistaPoikkeukset (tila) {
   const alerts = data.alerts
   // Menee jokaisen poikkeuksen läpi
   for (let i = 0; i < alerts.length; i += 1) {
-  // Tarkistaa onko poikkeus jo olemassa
-    if (poikkeukset.indexOf(alerts[i].alertDescriptionText) === -1) {
+    // Tarkistaa onko poikkeus jo olemassa
+    if (poikkeukset.indexOf(alerts[i].id) === -1) {
       // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
-      poikkeukset.push(alerts[i].alertDescriptionText)
+      poikkeukset.push(alerts[i].id)
 
       var lahetettavaViesti
-      let alertId = alerts[i].id
+      const alertId = alerts[i].id
       var alertDescription = alerts[i].alertDescriptionText // Poikkeuksen kuvaus
       var alertSeverity = alerts[i].alertSeverityLevel // Poikkeuksen tärkeys
       var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
