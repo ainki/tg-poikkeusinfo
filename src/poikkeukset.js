@@ -126,7 +126,7 @@ function poikkeusViestiListaus (id, description, msgId, endDate) {
     alertMessageId: msgId,
     alertEndDate: endDate
   })
-  db.saveDatabase()
+  // db.saveDatabase()
 }
 
 async function poikkeusViestiUpdate (alerts) {
@@ -142,11 +142,11 @@ async function poikkeusViestiUpdate (alerts) {
           poikkeukset.push(alerts[x].alertDescriptionText)
           var editoituViesti = poikkeusViestiBuild(alerts[x])
           console.log(editoituViesti)
-          bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId })
+          bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId, parse_mode: 'HTML' })
           // Update db
-          let dbEdit = poikkeusViestit.find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId })
-          dbEdit.alertDescription = alerts[x].alertDescriptionText
-          poikkeusViestit.update(dbEdit)
+          poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function(obj) {
+            obj.alertDescription = alerts[x].alertDescriptionText
+          })
         }
       }
     }
