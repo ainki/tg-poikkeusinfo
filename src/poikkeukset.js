@@ -141,6 +141,7 @@ async function poikkeusViestiUpdate (alerts) {
           console.log('[HSL Update Alert] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
           poikkeukset.push(alerts[x].alertDescriptionText)
           var editoituViesti = poikkeusViestiBuild(alerts[x])
+          console.log(editoituViesti)
           bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId })
         }
       }
