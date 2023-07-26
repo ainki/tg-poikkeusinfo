@@ -64,7 +64,7 @@ async function tarkistaPoikkeukset (tila) {
       // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
       poikkeukset.push(alerts[i].id)
 
-      var lahetettavaViesti
+      // var lahetettavaViesti
       const alertId = alerts[i].id
       var alertDescription = alerts[i].alertDescriptionText // Poikkeuksen kuvaus
       var alertSeverity = alerts[i].alertSeverityLevel // Poikkeuksen tärkeys
@@ -72,28 +72,8 @@ async function tarkistaPoikkeukset (tila) {
       // Lisätään poikkeukselle 3 tuntia lisää, jotta poikkeus ei katoa liian nopeasti
       alertEndDate = Number(alertEndDate) + 10800
 
-      // Tarkastaa onko poikkeuksella kulkuneuvo ja rakentaa viestin
-      if (!alerts[i].route) {
-        lahetettavaViesti = '<b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-      } else {
-        var mode = alerts[i].route.mode
-        // Lisää viestin alkuun merkin
-        switch (mode) {
-          case 'BUS': lahetettavaViesti = 'Ⓑ <b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-            break
-          case 'SUBWAY': lahetettavaViesti = 'Ⓜ <b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-            break
-          case 'TRAM': lahetettavaViesti = 'Ⓡ <b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-            break
-          case 'RAIL': lahetettavaViesti = 'Ⓙ <b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-            break
-          case 'FERRY': lahetettavaViesti = 'Ⓛ <b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-            break
-          default:
-            lahetettavaViesti = '<b>' + alerts[i].alertHeaderText + '</b>\n' + alerts[i].alertDescriptionText
-            break
-        }
-      }
+      var lahetettavaViesti = poikkeusViestiBuild(alerts[i])
+
       // Logataan poikkeus konsoliin
       console.log('[HSL Alert] ' + alertDescription) // Logataan alert konsoliin
       // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
@@ -108,6 +88,35 @@ async function tarkistaPoikkeukset (tila) {
       }
     }
   }
+  // Tarkistaa onko päivitettäviä poikkeuksia
+  poikkeusViestiUpdate(alerts)
+}
+
+function poikkeusViestiBuild (alertsi) {
+  var lahetettavaViesti
+  // Tarkastaa onko poikkeuksella kulkuneuvo ja rakentaa viestin
+  if (!alertsi.route) {
+    lahetettavaViesti = '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+  } else {
+    var mode = alertsi.route.mode
+    // Lisää viestin alkuun merkin
+    switch (mode) {
+      case 'BUS': lahetettavaViesti = 'Ⓑ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+        break
+      case 'SUBWAY': lahetettavaViesti = 'Ⓜ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+        break
+      case 'TRAM': lahetettavaViesti = 'Ⓡ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+        break
+      case 'RAIL': lahetettavaViesti = 'Ⓙ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+        break
+      case 'FERRY': lahetettavaViesti = 'Ⓛ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+        break
+      default:
+        lahetettavaViesti = '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
+        break
+    }
+  }
+  return lahetettavaViesti
 }
 
 function poikkeusViestiListaus (id, description, msgId, endDate) {
@@ -120,8 +129,21 @@ function poikkeusViestiListaus (id, description, msgId, endDate) {
   db.saveDatabase()
 }
 
-async function poikkeusViestiUpdate () {
-  
+async function poikkeusViestiUpdate (alerts) {
+  console.log('poikkeusViestiUpdate')
+  var kaikkiPoikkeusViestit = poikkeusViestit.chain().data()
+  for (let y = 0; y < kaikkiPoikkeusViestit.length; y += 1) {
+    for (let x = 0; x < alerts.length; x += 1) {
+      if (kaikkiPoikkeusViestit[y].alertId === alerts[x].id) {
+        // console.log(kaikkiPoikkeusViestit[y].alertId + ' = ' + alerts[x].id)
+        if (kaikkiPoikkeusViestit[y].alertDescription !== alerts[x].alertDescriptionText) {
+          console.log('Not same text, update text')
+          var editoituViesti = poikkeusViestiBuild(alerts[x])
+          bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId })
+        }
+      }
+    }
+  }
 }
 
 async function poikkeusViestiPoisto () {
