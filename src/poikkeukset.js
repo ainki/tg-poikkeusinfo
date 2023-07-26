@@ -130,14 +130,15 @@ function poikkeusViestiListaus (id, description, msgId, endDate) {
 }
 
 async function poikkeusViestiUpdate (alerts) {
-  console.log('poikkeusViestiUpdate')
+  // console.log('poikkeusViestiUpdate')
   var kaikkiPoikkeusViestit = poikkeusViestit.chain().data()
   for (let y = 0; y < kaikkiPoikkeusViestit.length; y += 1) {
     for (let x = 0; x < alerts.length; x += 1) {
       if (kaikkiPoikkeusViestit[y].alertId === alerts[x].id) {
         // console.log(kaikkiPoikkeusViestit[y].alertId + ' = ' + alerts[x].id)
         if (kaikkiPoikkeusViestit[y].alertDescription !== alerts[x].alertDescriptionText) {
-          console.log('Not same text, update text')
+          // console.log('Not same text, update text')
+          console.log('[HSL Update Alert] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
           poikkeukset.push(alerts[x].alertDescriptionText)
           var editoituViesti = poikkeusViestiBuild(alerts[x])
           bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId })
