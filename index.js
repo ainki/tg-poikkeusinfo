@@ -38,8 +38,8 @@ if (config.enablePoikkeukset === true) {
       })
   })
 
-  // Tarkistaa poistettavat viestit joka viides minuutti
-  cron.schedule('*/5 * * * *', () => {
+  // Tarkistaa poistettavat viestit joka seitsemäs minuutti
+  cron.schedule('*/7 * * * *', () => {
     poikkeukset.poikkeusViestiPoisto()
   })
 }
