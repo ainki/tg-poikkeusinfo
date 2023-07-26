@@ -15,7 +15,7 @@ var db = new Loki('./data/perutut.db',
   {
     autoload: true,
     autosave: true,
-    autosaveInterval: 30000,
+    autosaveInterval: 10000,
     autoloadCallback: databaseInitialize
   }
 )
