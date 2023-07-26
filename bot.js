@@ -5,10 +5,12 @@
 // npm
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
+const config = require('./config')
 
 // Telegram bot token
 const token = process.env.token
+const options = { polling: config.enableDebug }
 
-const bot = new TelegramBot(token, { polling: false })
+const bot = new TelegramBot(token, options)
 
 module.exports = bot

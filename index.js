@@ -53,8 +53,8 @@ if (config.enablePoikkeukset === true) {
 // Debug mode, eli jos tarvitaan vaikka uuden kanavan ID:tä, niin tämä tulostaa kaikki tulevat viestit konsoliin
 if (config.enableDebug === true) {
   console.log('Debug mode enabled')
-  bot.on('text', function (msg) {
-    console.log(`[text] ${msg.chat.id}: ${msg.text}`)
+  bot.on('channel_post', msg => {
+    // console.log(`[text] ${msg.chat.id}: ${msg.text}`)
+    console.log(msg)
   })
-  bot.start()
 }
