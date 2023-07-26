@@ -143,6 +143,10 @@ async function poikkeusViestiUpdate (alerts) {
           var editoituViesti = poikkeusViestiBuild(alerts[x])
           console.log(editoituViesti)
           bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId })
+          // Update db
+          let dbEdit = poikkeusViestit.find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId })
+          dbEdit.alertDescription = alerts[x].alertDescriptionText
+          poikkeusViestit.update(dbEdit)
         }
       }
     }
