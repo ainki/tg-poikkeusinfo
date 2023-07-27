@@ -58,7 +58,7 @@ async function tarkistaPoikkeukset (tila) {
   // Datan käsittely
   const alerts = data.alerts
   // Tarkistaa onko päivitettäviä poikkeuksia
-  poikkeusViestiUpdate(alerts)
+  await poikkeusViestiUpdate(alerts)
   // Menee jokaisen poikkeuksen läpi
   for (let i = 0; i < alerts.length; i += 1) {
     // Tarkistaa onko poikkeus jo olemassa
@@ -176,8 +176,8 @@ async function poikkeusViestiPoisto () {
       // console.debug('Poistettu viesti: ' + poistettavaViesti)
     }).catch(err => {
       console.error(err)
-      if (err.code === 400) {
-        console.error('[HSL Alert] Poistettava viesti ei löytynyt, poistetaan tietokannasta')
+      if (err.error_code === 400) {
+        console.error('[HSL Alert] Poistettavaa viesti ei löytynyt, poistetaan tietokannasta')
         poikkeusViestit.chain().find({ alertMessageId: poistettavaViesti }).remove()
       }
     })
