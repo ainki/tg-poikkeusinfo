@@ -140,6 +140,7 @@ function perututViestiPoisto () {
     db.saveDatabase()
     bot.deleteMessage(config.poikkeusChannelID, viestiID).then(re => {
       // console.debug('Poistettu viesti: ' + poistettavatViestit[i].cancelMsgId);
+      console.log('[HSL Cancelled delete] ' + poistettavatViestit[i].cancelMessage)
     }).catch(err => {
       console.error(err)
       if (err.response.body.error_code === 400) {

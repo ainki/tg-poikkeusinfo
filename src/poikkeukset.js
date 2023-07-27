@@ -141,7 +141,7 @@ async function poikkeusViestiUpdate (alerts) {
         // Jos tietokannan ja queryn alertDescription text eroaa
         if (kaikkiPoikkeusViestit[y].alertDescription !== alerts[x].alertDescriptionText) {
           // console.log('Not same text, update text')
-          console.log('[HSL Update Alert] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
+          console.log('[HSL Alert update] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
           // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
           poikkeukset.push(alerts[x].alertDescriptionText)
           // Rakentaa viestin
@@ -174,10 +174,11 @@ async function poikkeusViestiPoisto () {
     poikkeusViestit.chain().find({ alertMessageId: poistettavaViesti }).remove()
     bot.deleteMessage(config.poikkeusChannelID, poistettavaViesti).then(re => {
       // console.debug('Poistettu viesti: ' + poistettavaViesti)
+      console.log('[HSL Alert Delete] ' + poistettavatViestit[i].alertDescription)
     }).catch(err => {
       console.error(err)
       if (err.error_code === 400) {
-        console.error('[HSL Alert] Poistettavaa viesti ei löytynyt, poistetaan tietokannasta')
+        console.error('[HSL Alert delete] Poistettavaa viestiä ei löytynyt, poistetaan tietokannasta')
         poikkeusViestit.chain().find({ alertMessageId: poistettavaViesti }).remove()
       }
     })
