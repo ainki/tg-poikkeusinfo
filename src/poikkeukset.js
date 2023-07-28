@@ -157,6 +157,10 @@ async function poikkeusViestiUpdate (alerts) {
             obj.alertEndDate = alertEndDate
           })
         }
+      } else if (kaikkiPoikkeusViestit[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
+        poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
+          obj.alertEndDate = alertEndDate
+        })
       }
     }
   }
