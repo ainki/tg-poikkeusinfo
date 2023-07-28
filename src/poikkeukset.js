@@ -144,6 +144,9 @@ async function poikkeusViestiUpdate (alerts) {
           console.log('[HSL Alert update] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
           // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
           poikkeukset.push(alerts[x].alertDescriptionText)
+          // Tekee uuden endDaten
+          var alertEndDate = alerts[x].effectiveEndDate
+          alertEndDate = Number(alertEndDate) + 10800
           // Rakentaa viestin
           var editoituViesti = poikkeusViestiBuild(alerts[x])
           // Muokkaa viestin
@@ -151,6 +154,7 @@ async function poikkeusViestiUpdate (alerts) {
           // Päivittää tekstin tietokantaan
           poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
             obj.alertDescription = alerts[x].alertDescriptionText
+            obj.alertEndDate = alertEndDate
           })
         }
       }
