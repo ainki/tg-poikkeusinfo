@@ -156,11 +156,14 @@ async function poikkeusViestiUpdate (alerts) {
             obj.alertDescription = alerts[x].alertDescriptionText
             obj.alertEndDate = alertEndDate
           })
+        } else if (kaikkiPoikkeusViestit[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
+          // Jos tietokannan ja queryn endDate eroaa toisistaan
+          console.log('[HSL Alert update] (End date changed) ' + alerts[x].alertDescriptionText)
+          const alertEndDate = Number(alerts[x].effectiveEndDate) + 10800
+          poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
+            obj.alertEndDate = alertEndDate
+          })
         }
-      } else if (kaikkiPoikkeusViestit[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
-        poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
-          obj.alertEndDate = alertEndDate
-        })
       }
     }
   }
