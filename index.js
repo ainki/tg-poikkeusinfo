@@ -23,24 +23,36 @@ if (config.enablePerutut === true) {
       })
   })
 
-  // Tarkistaa poistettavat viestit joka viides minuutti
+  // Tarkistaa poistettavat viestit joka kymmenes minuutti
   cron.schedule('*/5 * * * *', () => {
-    perutut.perututViestiPoisto()
+    setTimeout(function () {
+      perutut.perututViestiPoisto()
+        .catch(err => {
+          console.error(err)
+        })
+    }, 40000)
   })
 }
 
 if (config.enablePoikkeukset === true) {
-  // Tarkistaa poikkeukset joka toinen minuutti
-  cron.schedule('*/2 * * * *', () => {
-    poikkeukset.tarkistaPoikkeukset(1)
-      .catch(err => {
-        console.error(err)
-      })
+  // Tarkistaa poikkeukset joka minuutti
+  cron.schedule('* * * * *', () => {
+    setTimeout(function () {
+      poikkeukset.tarkistaPoikkeukset(1)
+        .catch(err => {
+          console.error(err)
+        })
+    }, 5000)
   })
 
-  // Tarkistaa poistettavat viestit joka seitsemäs minuutti
-  cron.schedule('*/7 * * * *', () => {
-    poikkeukset.poikkeusViestiPoisto()
+  // Tarkistaa poistettavat viestit joka 5 minuutti
+  cron.schedule('*/5 * * * *', () => {
+    setTimeout(function () {
+      poikkeukset.poikkeusViestiPoisto()
+        .catch(err => {
+          console.error(err)
+        })
+    }, 20000)
   })
 }
 
@@ -51,10 +63,9 @@ if (config.enablePoikkeukset === true) {
  */
 
 // Debug mode, eli jos tarvitaan vaikka uuden kanavan ID:tä, niin tämä tulostaa kaikki tulevat viestit konsoliin
-if (config.enableDebug === true) {
-  console.log('Debug mode enabled')
+if (config.enablePolling === true) {
+  console.info('Polling mode enabled')
   bot.on('channel_post', msg => {
-    // console.log(`[text] ${msg.chat.id}: ${msg.text}`)
     console.log(msg)
   })
 }
