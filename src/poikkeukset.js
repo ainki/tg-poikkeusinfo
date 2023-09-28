@@ -163,7 +163,7 @@ async function poikkeusViestiPoisto () {
     if (rows.length !== 0) {
       rows.forEach((row) => {
         bot.deleteMessage(config.poikkeusChannelID, row.alert_msg_id).then(re => {
-          const removeSQL = 'DELETE FROM perututvuorot WHERE alert_msg_id = ?'
+          const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
           db.run(removeSQL, row.alert_msg_id, (err) => {
             if (err) {
               console.error(err)
@@ -173,7 +173,7 @@ async function poikkeusViestiPoisto () {
           console.error('TELEGRAM ERROR' + err.response.body.error_code + ' ' + err.response.body.description)
           if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
             console.log('[HSL A delete] Message cannot be found, deleting from database')
-            const removeSQL = 'DELETE FROM perututvuorot WHERE alert_msg_id = ?'
+            const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
             db.run(removeSQL, row.alert_msg_id, (err) => {
               if (err) {
                 console.error(err)
