@@ -131,7 +131,7 @@ async function poikkeusViestiUpdate (alerts) {
             // Muokkaa viestin
             bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alertMessageId, parse_mode: 'HTML' })
             // Päivittää tekstin tietokantaan
-            const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ? AND alert_end_date = ? WHERE alert_msg_id = ?'
+            const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
             db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alertMessageId], (err) => {
               if (err) {
                 console.error(err)
