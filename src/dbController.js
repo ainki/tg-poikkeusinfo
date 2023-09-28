@@ -26,7 +26,6 @@ function createTables (newdb) {
     cancel_msg_id int not null,
     cancel_end_date int not null,
     cancel_message text
-    cancel_msg_deleted text
   );
   `)
   newdb.run(`
