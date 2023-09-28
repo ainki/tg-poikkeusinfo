@@ -47,7 +47,7 @@ async function tarkistaPoikkeukset (tila) {
       var alertSeverity = alerts[i].alertSeverityLevel // Poikkeuksen tärkeys
       var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
       // Lisätään poikkeukselle 3 tuntia lisää, jotta poikkeus ei katoa liian nopeasti
-      alertEndDate = Number(alertEndDate) + 10800
+      alertEndDate = Number(alertEndDate) + 3600
 
       var lahetettavaViesti = poikkeusViestiBuild(alerts[i])
 
@@ -125,7 +125,7 @@ async function poikkeusViestiUpdate (alerts) {
             poikkeukset.push(alerts[x].alertDescriptionText)
             // Tekee uuden endDaten
             var alertEndDate = alerts[x].effectiveEndDate
-            alertEndDate = Number(alertEndDate) + 10800
+            alertEndDate = Number(alertEndDate) + 3600
             // Rakentaa viestin
             var editoituViesti = poikkeusViestiBuild(alerts[x])
             // Muokkaa viestin
@@ -140,7 +140,7 @@ async function poikkeusViestiUpdate (alerts) {
           } else if (rows[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
             // Jos tietokannan ja queryn endDate eroaa toisistaan
             console.log('[HSL A update end] ' + alerts[x].alertDescriptionText)
-            const alertEndDate = Number(alerts[x].effectiveEndDate) + 10800
+            const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
             const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date = ? WHERE alert_msg_id = ?'
             db.run(sqlUpdateEnd, [alertEndDate, rows[y].alertMessageId], (err) => {
               if (err) {
