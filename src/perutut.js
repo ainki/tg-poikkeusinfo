@@ -127,7 +127,7 @@ async function perututViestiPoisto () {
             }
           })
         }).catch(err => {
-          console.error(err.response.body.error_code)
+          console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
           // console.log(err.response.body.error_code)
           if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
             console.log('[HSL C del] Message cannot "' + row.cancel_message + '" be found, deleting from database')
