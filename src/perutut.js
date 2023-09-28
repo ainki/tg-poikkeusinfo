@@ -5,36 +5,11 @@ const bot = require('../bot')
 const config = require('../config')
 // npm
 const { request } = require('graphql-request')
-var Loki = require('lokijs')
 const moment = require('moment')
 moment.locale('fi-FI')
+const db = require('./dbController').db
 
-// Tietokanta
-var peruttuViestit
-var db = new Loki('./data/perutut.db',
-  {
-    autoload: true,
-    autosave: true,
-    autosaveInterval: 10000,
-    autoloadCallback: databaseInitialize
-  }
-)
-
-// implement the autoloadback referenced in loki constructor
-function databaseInitialize () {
-  console.info('[HSL Cancelled] Ladataan tietokanta...')
-  peruttuViestit = db.getCollection('perututuViestit')
-  if (peruttuViestit === null) {
-    console.info('[HSL Cancelled] Tietokantaa ei löytynyt, luodaan uusi...')
-    peruttuViestit = db.addCollection('perututuViestit')
-  }
-
-  // kick off any program logic or start listening to external events
-  tarkistaPerutut()
-  console.info('[HSL Cancelled] Tietokanta ladattu:')
-  console.log(peruttuViestit.data)
-}
-
+// Consts
 const listaPerutuista = []
 
 // Poikkeusten hakufunktio
@@ -57,7 +32,7 @@ async function tarkistaPerutut (tila) {
       }
     }
     }
-    }`
+  }`
 
   const data = await request(config.digitransitAPILink, query)
   // Datan käsittely
@@ -104,56 +79,74 @@ async function tarkistaPerutut (tila) {
             break
         }
       }
-      console.log('[HSL Cancelled] ' + lahetettavaViesti) // Logataan alert konsoliin
-
+      console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
       // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
       if (tila === 1) {
         const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti)
         const msgId = lahetettyViesti.message_id
-        perututVuorotViestiLista(tripId, msgId, alertEndDate, lahetettavaViesti)
+        if (config.enableDebug === true) {
+          // console.debug(lahetettyViesti)
+        }
+        await perututVuorotViestiDb(tripId, msgId, alertEndDate, lahetettavaViesti)
       }
     }
   }
 }
 
-function perututVuorotViestiLista (tripId, msgId, effectiveEndDate, messageBody) {
-  peruttuViestit.insert({
-    cancelTripId: tripId,
-    cancelMsgId: msgId,
-    cancelEndDate: effectiveEndDate,
-    cancelMessage: messageBody
-  })
-  // db.saveDatabase()
-}
-
-function perututViestiPoisto () {
-  // console.debug('[HSL Peruttu] Tarkistetaan poistettavia peruttu viestejä');
-  // Hakee tietokannasta viestit jotka on vanhempia kuin 3 tuntia
-  var poistettavatViestit = peruttuViestit.chain()
-    .find({ cancelEndDate: { $lt: moment().unix() } })
-    .data()
-
-  for (let i = 0; i < poistettavatViestit.length; i += 1) {
-    var viestiID = poistettavatViestit[i].cancelMsgId
-    // console.log('Poistetaan viesti ID: ' + viestiID);
-    peruttuViestit.chain().find({ cancelMsgId: viestiID }).remove()
-    db.saveDatabase()
-    bot.deleteMessage(config.poikkeusChannelID, viestiID).then(re => {
-      // console.debug('Poistettu viesti: ' + poistettavatViestit[i].cancelMsgId);
-      console.log('[HSL Cancelled delete] ' + poistettavatViestit[i].cancelMessage)
-    }).catch(err => {
+function perututVuorotViestiDb (tripId, msgId, effectiveEndDate, messageBody) {
+  const insertSQL = 'INSERT INTO perututvuorot (cancel_trip_id, cancel_msg_id, cancel_end_date, cancel_message) VALUES (?, ?, ?, ?)'
+  db.run(insertSQL, [tripId, msgId, effectiveEndDate, messageBody], (err) => {
+    if (err) {
       console.error(err)
-      if (err.response.body.error_code === 400) {
-        console.debug('Viestiä ei löytynyt, poistetaan tietokannasta')
-        peruttuViestit.chain().find({ cancelMsgId: viestiID }).remove()
-      }
-    })
-  }
-
-  db.saveDatabase()
-  // console.debug('Tietokanta poiston jälkeen: ')
-  // console.debug(peruttuViestit.data)
+    } else {
+      // console.log(`Row inserted with ID ${this.lastID}`)
+    }
+  })
 }
+
+async function perututViestiPoisto () {
+  // Hakee tietokannasta viestit jotka on vanhempia kuin 3 tuntia
+  // SQL query to select rows where the integer column is less than the target value
+  const sqlQuery = 'SELECT * FROM perututvuorot WHERE cancel_end_date < ?'
+  db.all(sqlQuery, moment().unix(), (err, rows) => {
+    if (err) {
+      return console.error(err)
+    }
+    if (rows.length !== 0) {
+      // console.info('[HSLC delete] Messages to be deleted:')
+      // console.debug(rows)
+      rows.forEach((row) => {
+        // console.log(row)
+        bot.deleteMessage(config.poikkeusChannelID, row.cancel_msg_id).then(re => {
+          const removeSQL = 'DELETE FROM perututvuorot WHERE cancel_message = ?'
+          db.run(removeSQL, row.cancel_message, (err) => {
+            if (err) {
+              console.error(err)
+            } else {
+              console.log('[HSL C deleted] ' + row.cancel_message)
+            }
+          })
+        }).catch(err => {
+          console.error(err.response.body.error_code)
+          // console.log(err.response.body.error_code)
+          if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
+            console.log('[HSL C delete] Message cannot be found, deleting from database')
+            const removeSQL = 'DELETE FROM perututvuorot WHERE cancel_message = ?'
+            db.run(removeSQL, row.cancel_message, (err) => {
+              if (err) {
+                console.error(err)
+              } else {
+                console.info('[HSL C delete] Row deleted successfully')
+              }
+            })
+          }
+        })
+      })
+    }
+  })
+}
+
+tarkistaPerutut()
 
 module.exports = {
   tarkistaPerutut,
