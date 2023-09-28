@@ -167,6 +167,8 @@ async function poikkeusViestiPoisto () {
           db.run(removeSQL, row.alert_msg_id, (err) => {
             if (err) {
               console.error(err)
+            } else {
+              console.log('[HSL A del] ' + row.alert_description)
             }
           })
         }).catch(err => {
@@ -177,6 +179,8 @@ async function poikkeusViestiPoisto () {
             db.run(removeSQL, row.alert_msg_id, (err) => {
               if (err) {
                 console.error(err)
+              } else {
+                console.log('[HSL A del] Row deleted successfully')
               }
             })
           }

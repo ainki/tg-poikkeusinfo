@@ -123,20 +123,20 @@ async function perututViestiPoisto () {
             if (err) {
               console.error(err)
             } else {
-              console.log('[HSL C deleted] ' + row.cancel_message)
+              console.log('[HSL C del] ' + row.cancel_message)
             }
           })
         }).catch(err => {
           console.error(err.response.body.error_code)
           // console.log(err.response.body.error_code)
           if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
-            console.log('[HSL C delete] Message cannot be found, deleting from database')
+            console.log('[HSL C del] Message cannot "' + row.cancel_message + '" be found, deleting from database')
             const removeSQL = 'DELETE FROM perututvuorot WHERE cancel_message = ?'
             db.run(removeSQL, row.cancel_message, (err) => {
               if (err) {
                 console.error(err)
               } else {
-                console.info('[HSL C delete] Row deleted successfully')
+                console.info('[HSL C del] Row deleted successfully')
               }
             })
           }
