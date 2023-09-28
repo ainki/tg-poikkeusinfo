@@ -9,7 +9,7 @@ const config = require('./config')
 
 // Telegram bot token
 const token = process.env.token
-const options = { polling: config.enableDebug }
+const options = { polling: config.enablePolling }
 
 const bot = new TelegramBot(token, options)
 
