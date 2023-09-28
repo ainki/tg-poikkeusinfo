@@ -17,42 +17,24 @@ consoleStartMessage()
 if (config.enablePerutut === true) {
   // Tarkistaa perutut joka minuutti
   cron.schedule('* * * * *', () => {
-    perutut.tarkistaPerutut(1)
-      .catch(err => {
-        console.error(err)
-      })
+    perutut.tarkistaPerutut(1).catch(err => { console.error(err) })
   })
 
   // Tarkistaa poistettavat viestit joka kymmenes minuutti
   cron.schedule('*/5 * * * *', () => {
-    setTimeout(function () {
-      perutut.perututViestiPoisto()
-        .catch(err => {
-          console.error(err)
-        })
-    }, 40000)
+    perutut.perututViestiPoisto().catch(err => { console.error(err) })
   })
 }
 
 if (config.enablePoikkeukset === true) {
   // Tarkistaa poikkeukset joka minuutti
   cron.schedule('* * * * *', () => {
-    setTimeout(function () {
-      poikkeukset.tarkistaPoikkeukset(1)
-        .catch(err => {
-          console.error(err)
-        })
-    }, 5000)
+    poikkeukset.tarkistaPoikkeukset(1).catch(err => { console.error(err) })
   })
 
   // Tarkistaa poistettavat viestit joka 5 minuutti
   cron.schedule('*/5 * * * *', () => {
-    setTimeout(function () {
-      poikkeukset.poikkeusViestiPoisto()
-        .catch(err => {
-          console.error(err)
-        })
-    }, 20000)
+    poikkeukset.poikkeusViestiPoisto().catch(err => { console.error(err) })
   })
 }
 
