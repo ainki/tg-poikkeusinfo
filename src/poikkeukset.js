@@ -29,38 +29,33 @@ async function tarkistaPoikkeukset (tila) {
       }
     }`
 
-  const data = await request(config.digitransitAPILink, query)
-  // Datan käsittely
+  const data = await request(config.digitransitAPILink, query) // Api query
+  // Datan käsittely ->
   const alerts = data.alerts
-  // Tarkistaa onko päivitettäviä poikkeuksia
-  await poikkeusViestiUpdate(alerts)
+  await poikkeusViestiUpdate(alerts) // Tarkistaa päivitettävät poikkeukset
   // Menee jokaisen poikkeuksen läpi
   for (let i = 0; i < alerts.length; i += 1) {
     // Tarkistaa onko poikkeus jo olemassa
     if (poikkeukset.indexOf(alerts[i].alertDescriptionText) === -1) {
-      // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
-      poikkeukset.push(alerts[i].alertDescriptionText)
-
-      // var lahetettavaViesti
-      const alertId = alerts[i].id
-      var alertDescription = alerts[i].alertDescriptionText // Poikkeuksen kuvaus
-      var alertSeverity = alerts[i].alertSeverityLevel // Poikkeuksen tärkeys
-      var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
-      // Lisätään poikkeukselle 3 tuntia lisää, jotta poikkeus ei katoa liian nopeasti
-      alertEndDate = Number(alertEndDate) + 3600
-
-      var lahetettavaViesti = poikkeusViestiBuild(alerts[i])
-
-      // Logataan poikkeus konsoliin
-      console.log('[HSL A] ' + alertDescription) // Logataan alert konsoliin
-      // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
-      if (tila === 1) {
-        const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
-        const msgId = lahetettyViesti.message_id
-        poikkeusViestiDb(alertId, alertDescription, msgId, alertEndDate)
-        if (alertSeverity === 'SEVERE') {
-          const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
-          console.info('[HSL A Pinned]' + pinned.message_id)
+      poikkeukset.push(alerts[i].alertDescriptionText) // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
+      // Filteröidään INFO ja NO_EFFECT pois
+      if (alerts[i].alertSeverityLevel === 'INFO' && alerts[i].alertEffect === 'NO_EFFECT') {
+        // Do nothing for now
+      } else {
+        const alertId = alerts[i].id // Poikkeuksen id
+        var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
+        alertEndDate = Number(alertEndDate) + 3600 // Lisätään poikkeukselle tunti lisää, jotta poikkeus ei katoa liian nopeasti
+        var lahetettavaViesti = poikkeusViestiBuild(alerts[i]) // Viestin rakennus poikkeusViestiBuildissa
+        console.log('[HSL A] ' + alerts[i].alertDescriptionText) // Logataan alert konsoliin
+        // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
+        if (tila === 1) {
+          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
+          const msgId = lahetettyViesti.message_id
+          poikkeusViestiDb(alertId, alerts[i].alertDescriptionText, msgId, alertEndDate)
+          if (alerts[i].alertSeverityLevel === 'SEVERE') {
+            const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
+            console.info('[HSL A Pinned]' + pinned.message_id)
+          }
         }
       }
     }
