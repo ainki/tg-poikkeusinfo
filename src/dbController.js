@@ -4,6 +4,7 @@ const filepath = './data/poikkeukset.sqlite'
 // Init database
 const db = new sqlite3.Database(filepath, sqlite3.OPEN_READWRITE, (err) => {
   if (err && err.code === 'SQLITE_CANTOPEN') {
+    console.info('[DB] Does not exist, creating new...')
     createDatabase()
   } else if (err) {
     console.error(err)
@@ -14,8 +15,10 @@ function createDatabase () {
   const newdb = new sqlite3.Database(filepath, (err) => {
     if (err) {
       return console.log(err)
+    } else {
+      console.info('[DB] Database created, creating tables...')
+      createTables(newdb)
     }
-    createTables(newdb)
   })
 }
 
@@ -36,6 +39,7 @@ function createTables (newdb) {
     alert_description text
   );
   `)
+  console.info('[DB] Tables created')
 }
 
 module.exports = {
