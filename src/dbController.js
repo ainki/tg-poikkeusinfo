@@ -9,6 +9,7 @@ const db = new sqlite3.Database(filepath, sqlite3.OPEN_READWRITE, (err) => {
   } else if (err) {
     console.error(err)
   }
+  console.info('[DB] Opened db')
 })
 
 function createDatabase () {
