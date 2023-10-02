@@ -50,44 +50,46 @@ async function tarkistaPerutut (tila) {
 
       var alertEndDate = departureTimeNum + 7200 + serviceDayNum // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
       // var alertEndDate = departureTimeNum + 180 + serviceDayNum // Kolme minuuttia (testausta varten)
+      // Tarkistaa onko peruttu vuoro relevantti enään
+      if (alertEndDate > moment().unix()) {
+        // Viesti
+        let lahetettavaViesti
 
-      // Viesti
-      let lahetettavaViesti
-
-      // Vuoron perumisen päivämäärä
-      if (moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') === moment().format('L')) {
-        lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
-      } else {
-        lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
-      }
-      // Lisää viestin alkuun merkin jos kulkuneivo tiedossa
-      var mode = perututVuorot[i].trip.pattern.route.mode
-      if (perututVuorot[i].trip.pattern.route.mode) {
-        switch (mode) {
-          case 'BUS': lahetettavaViesti = 'Ⓑ ' + lahetettavaViesti
-            break
-          case 'SUBWAY': lahetettavaViesti = 'Ⓜ ' + lahetettavaViesti
-            break
-          case 'TRAM': lahetettavaViesti = 'Ⓡ ' + lahetettavaViesti
-            break
-          case 'RAIL': lahetettavaViesti = 'Ⓙ ' + lahetettavaViesti
-            break
-          case 'FERRY': lahetettavaViesti = 'Ⓛ ' + lahetettavaViesti
-            break
-          default:
-            // lahetettavaViesti = lahetettavaViesti
-            break
+        // Vuoron perumisen päivämäärä
+        if (moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') === moment().format('L')) {
+          lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
+        } else {
+          lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
         }
-      }
-      console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
-      // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
-      if (tila === 1) {
-        const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti)
-        const msgId = lahetettyViesti.message_id
-        if (config.enableDebug === true) {
-          // console.debug(lahetettyViesti)
+        // Lisää viestin alkuun merkin jos kulkuneivo tiedossa
+        var mode = perututVuorot[i].trip.pattern.route.mode
+        if (perututVuorot[i].trip.pattern.route.mode) {
+          switch (mode) {
+            case 'BUS': lahetettavaViesti = 'Ⓑ ' + lahetettavaViesti
+              break
+            case 'SUBWAY': lahetettavaViesti = 'Ⓜ ' + lahetettavaViesti
+              break
+            case 'TRAM': lahetettavaViesti = 'Ⓡ ' + lahetettavaViesti
+              break
+            case 'RAIL': lahetettavaViesti = 'Ⓙ ' + lahetettavaViesti
+              break
+            case 'FERRY': lahetettavaViesti = 'Ⓛ ' + lahetettavaViesti
+              break
+            default:
+              // lahetettavaViesti = lahetettavaViesti
+              break
+          }
         }
-        await perututVuorotViestiDb(tripId, msgId, alertEndDate, lahetettavaViesti)
+        console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
+        // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
+        if (tila === 1) {
+          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti)
+          const msgId = lahetettyViesti.message_id
+          if (config.enableDebug === true) {
+            // console.debug(lahetettyViesti)
+          }
+          await perututVuorotViestiDb(tripId, msgId, alertEndDate, lahetettavaViesti)
+        }
       }
     }
   }
