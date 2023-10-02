@@ -4,38 +4,13 @@ const bot = require('../bot')
 const config = require('../config')
 // paketit
 const { request } = require('graphql-request')
-var Loki = require('lokijs')
 var moment = require('moment')
 moment.locale('fi-FI')
+const db = require('./dbController').db
 
-// Tietokanta viesteille
-var poikkeusViestit
-var db = new Loki('./data/poikkeus.db',
-  {
-    autoload: true,
-    autosave: true,
-    autosaveInterval: 10000,
-    autoloadCallback: databaseInitialize
-  }
-)
-
-// implement the autoloadback referenced in loki constructor
-function databaseInitialize () {
-  console.info('[HSL Alert] Ladataan tietokanta...')
-  poikkeusViestit = db.getCollection('poikkeusViestit')
-  if (poikkeusViestit === null) {
-    console.info('[HSL Alert] Tietokantaa ei löytynyt, luodaan uusi...')
-    poikkeusViestit = db.addCollection('poikkeusViestit')
-  }
-  // kick off any program logic or start listening to external events
-  tarkistaPoikkeukset()
-  console.info('[HSL Alert] Tietokanta ladattu:')
-  console.log(poikkeusViestit.data)
-}
-
+// Consts
 const poikkeukset = []
 
-// Hae poikeukset
 async function tarkistaPoikkeukset (tila) {
   // graphQL hakulause
   const query = `
@@ -54,38 +29,33 @@ async function tarkistaPoikkeukset (tila) {
       }
     }`
 
-  const data = await request(config.digitransitAPILink, query)
-  // Datan käsittely
+  const data = await request(config.digitransitAPILink, query) // Api query
+  // Datan käsittely ->
   const alerts = data.alerts
-  // Tarkistaa onko päivitettäviä poikkeuksia
-  await poikkeusViestiUpdate(alerts)
+  await poikkeusViestiUpdate(alerts) // Tarkistaa päivitettävät poikkeukset
   // Menee jokaisen poikkeuksen läpi
   for (let i = 0; i < alerts.length; i += 1) {
     // Tarkistaa onko poikkeus jo olemassa
     if (poikkeukset.indexOf(alerts[i].alertDescriptionText) === -1) {
-      // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
-      poikkeukset.push(alerts[i].alertDescriptionText)
-
-      // var lahetettavaViesti
-      const alertId = alerts[i].id
-      var alertDescription = alerts[i].alertDescriptionText // Poikkeuksen kuvaus
-      var alertSeverity = alerts[i].alertSeverityLevel // Poikkeuksen tärkeys
-      var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
-      // Lisätään poikkeukselle 3 tuntia lisää, jotta poikkeus ei katoa liian nopeasti
-      alertEndDate = Number(alertEndDate) + 10800
-
-      var lahetettavaViesti = poikkeusViestiBuild(alerts[i])
-
-      // Logataan poikkeus konsoliin
-      console.log('[HSL Alert] ' + alertDescription) // Logataan alert konsoliin
-      // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
-      if (tila === 1) {
-        const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
-        const msgId = lahetettyViesti.message_id
-        poikkeusViestiListaus(alertId, alertDescription, msgId, alertEndDate)
-        if (alertSeverity === 'SEVERE') {
-          const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
-          console.info('[HSL Alert] Viesti ' + pinned.message_id + ' pinnattu')
+      poikkeukset.push(alerts[i].alertDescriptionText) // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
+      // Filteröidään INFO ja NO_EFFECT pois
+      if (alerts[i].alertSeverityLevel === 'INFO' && alerts[i].alertEffect === 'NO_EFFECT') {
+        // Do nothing for now
+      } else {
+        const alertId = alerts[i].id // Poikkeuksen id
+        var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
+        alertEndDate = Number(alertEndDate) + 3600 // Lisätään poikkeukselle tunti lisää, jotta poikkeus ei katoa liian nopeasti
+        var lahetettavaViesti = poikkeusViestiBuild(alerts[i]) // Viestin rakennus poikkeusViestiBuildissa
+        console.log('[HSL A] ' + alerts[i].alertDescriptionText) // Logataan alert konsoliin
+        // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
+        if (tila === 1) {
+          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
+          const msgId = lahetettyViesti.message_id
+          poikkeusViestiDb(alertId, alerts[i].alertDescriptionText, msgId, alertEndDate)
+          if (alerts[i].alertSeverityLevel === 'SEVERE') {
+            const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
+            console.info('[HSL A Pinned]' + pinned.message_id)
+          }
         }
       }
     }
@@ -120,82 +90,102 @@ function poikkeusViestiBuild (alertsi) {
   return lahetettavaViesti
 }
 
-// Tietokantaan tieto
-function poikkeusViestiListaus (id, description, msgId, endDate) {
-  poikkeusViestit.insert({
-    alertId: id,
-    alertDescription: description,
-    alertMessageId: msgId,
-    alertEndDate: endDate
+function poikkeusViestiDb (id, description, msgId, endDate) {
+  const insertSQL = 'INSERT INTO poikkeusviestit (alert_id, alert_msg_id, alert_end_date, alert_description) VALUES (?, ?, ?, ?)'
+  db.run(insertSQL, [id, msgId, endDate, description], (err) => {
+    if (err) {
+      console.error(err)
+    } else {
+      // console.log(`Row inserted with ID ${this.lastID}`)
+    }
   })
-  // db.saveDatabase()
 }
 
 // Alertin päivitys
 async function poikkeusViestiUpdate (alerts) {
-  // console.log('poikkeusViestiUpdate')
-  var kaikkiPoikkeusViestit = poikkeusViestit.chain().data()
-  for (let y = 0; y < kaikkiPoikkeusViestit.length; y += 1) {
-    for (let x = 0; x < alerts.length; x += 1) {
-      if (kaikkiPoikkeusViestit[y].alertId === alerts[x].id) {
-        // Jos tietokannan ja queryn alertDescription text eroaa
-        if (kaikkiPoikkeusViestit[y].alertDescription !== alerts[x].alertDescriptionText) {
-          // console.log('Not same text, update text')
-          console.log('[HSL Alert update] >' + kaikkiPoikkeusViestit[y].alertDescription + '< to >' + alerts[x].alertDescriptionText + '<')
-          // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
-          poikkeukset.push(alerts[x].alertDescriptionText)
-          // Tekee uuden endDaten
-          var alertEndDate = alerts[x].effectiveEndDate
-          alertEndDate = Number(alertEndDate) + 10800
-          // Rakentaa viestin
-          var editoituViesti = poikkeusViestiBuild(alerts[x])
-          // Muokkaa viestin
-          bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: kaikkiPoikkeusViestit[y].alertMessageId, parse_mode: 'HTML' })
-          // Päivittää tekstin tietokantaan
-          poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
-            obj.alertDescription = alerts[x].alertDescriptionText
-            obj.alertEndDate = alertEndDate
-          })
-        } else if (kaikkiPoikkeusViestit[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
-          // Jos tietokannan ja queryn endDate eroaa toisistaan
-          console.log('[HSL Alert update] (End date changed) ' + alerts[x].alertDescriptionText)
-          const alertEndDate = Number(alerts[x].effectiveEndDate) + 10800
-          poikkeusViestit.chain().find({ alertMessageId: kaikkiPoikkeusViestit[y].alertMessageId }).update(function (obj) {
-            obj.alertEndDate = alertEndDate
-          })
+  // var kaikkiPoikkeusViestit = poikkeusViestit.chain().data()
+  const sqlAllRows = 'SELECT * FROM poikkeusviestit'
+  db.all(sqlAllRows, (err, rows) => {
+    if (err) {
+      return console.error(err)
+    }
+    for (let y = 0; y < rows.length; y += 1) {
+      for (let x = 0; x < alerts.length; x += 1) {
+        if (rows[y].alertId === alerts[x].id) {
+          // Jos tietokannan ja queryn alertDescription text eroaa
+          if (rows[y].alertDescription !== alerts[x].alertDescriptionText) {
+            // console.log('Not same text, update text')
+            console.log('[HSL A update] <' + rows[y].alertDescription + '> to <' + alerts[x].alertDescriptionText + '>')
+            // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
+            poikkeukset.push(alerts[x].alertDescriptionText)
+            // Tekee uuden endDaten
+            var alertEndDate = alerts[x].effectiveEndDate
+            alertEndDate = Number(alertEndDate) + 3600
+            // Rakentaa viestin
+            var editoituViesti = poikkeusViestiBuild(alerts[x])
+            // Muokkaa viestin
+            bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alertMessageId, parse_mode: 'HTML' })
+            // Päivittää tekstin tietokantaan
+            const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
+            db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alertMessageId], (err) => {
+              if (err) {
+                console.error(err)
+              }
+            })
+          } else if (rows[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
+            // Jos tietokannan ja queryn endDate eroaa toisistaan
+            console.log('[HSL A update end] ' + alerts[x].alertDescriptionText)
+            const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
+            const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date = ? WHERE alert_msg_id = ?'
+            db.run(sqlUpdateEnd, [alertEndDate, rows[y].alertMessageId], (err) => {
+              if (err) {
+                console.error(err)
+              }
+            })
+          }
         }
       }
     }
-  }
+  })
 }
 
 async function poikkeusViestiPoisto () {
-  // console.debug('[HSL Alert] Tarkistetaan poistettavia poikkeusviestejä')
-
-  var poistettavatViestit = poikkeusViestit.chain()
-    .find({ alertEndDate: { $lt: moment().unix() } })
-    .data()
-
-  // Käydää jokainen poistettava läpi ja poistetaan viesti
-
-  for (let i = 0; i < poistettavatViestit.length; i += 1) {
-    var poistettavaViesti = poistettavatViestit[i].alertMessageId
-    // console.debug('Poistettava viesti: ' + poistettavaViesti)
-    // console.debug('Poistettava tripId: ' + poistettavaAlertDescription)
-    poikkeusViestit.chain().find({ alertMessageId: poistettavaViesti }).remove()
-    bot.deleteMessage(config.poikkeusChannelID, poistettavaViesti).then(re => {
-      // console.debug('Poistettu viesti: ' + poistettavaViesti)
-      console.log('[HSL Alert Delete] ' + poistettavatViestit[i].alertDescription)
-    }).catch(err => {
-      console.error(err)
-      if (err.error_code === 400) {
-        console.error('[HSL Alert delete] Poistettavaa viestiä ei löytynyt, poistetaan tietokannasta')
-        poikkeusViestit.chain().find({ alertMessageId: poistettavaViesti }).remove()
-      }
-    })
-  }
-  db.saveDatabase()
+  const sqlQuery = 'SELECT * FROM poikkeusviestit WHERE alert_end_date < ?'
+  db.all(sqlQuery, moment().unix(), (err, rows) => {
+    if (err) {
+      return console.error(err)
+    }
+    if (rows.length !== 0) {
+      rows.forEach((row) => {
+        bot.deleteMessage(config.poikkeusChannelID, row.alert_msg_id).then(re => {
+          const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
+          db.run(removeSQL, row.alert_msg_id, (err) => {
+            if (err) {
+              console.error(err)
+            } else {
+              console.log('[HSL A del] ' + row.alert_description)
+            }
+          })
+        }).catch(err => {
+          console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
+          if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
+            console.log('[HSL A del] Message "' + row.alert_description + '" cannot be found, deleting from database')
+            const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
+            db.run(removeSQL, row.alert_msg_id, (err) => {
+              if (err) {
+                console.error(err)
+              } else {
+                console.log('[HSL A del] Row deleted successfully')
+              }
+            })
+          }
+        })
+      })
+    }
+  })
 }
+
+tarkistaPoikkeukset()
 
 module.exports = {
   tarkistaPoikkeukset,
