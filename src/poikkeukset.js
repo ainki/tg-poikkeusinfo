@@ -2,6 +2,7 @@
 
 const bot = require('../bot')
 const config = require('../config')
+const modes = require('./components/modeIcon')
 // paketit
 const { request } = require('graphql-request')
 var moment = require('moment')
@@ -32,29 +33,37 @@ async function tarkistaPoikkeukset (tila) {
   const data = await request(config.digitransitAPILink, query) // Api query
   // Datan käsittely ->
   const alerts = data.alerts
-  await poikkeusViestiUpdate(alerts) // Tarkistaa päivitettävät poikkeukset
+  try {
+    await poikkeusViestiUpdate(alerts)
+    newAlert(alerts)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function newAlert (alerts, tila) {
   // Menee jokaisen poikkeuksen läpi
   for (let i = 0; i < alerts.length; i += 1) {
-    // Tarkistaa onko poikkeus jo olemassa
-    if (poikkeukset.indexOf(alerts[i].alertDescriptionText) === -1) {
-      poikkeukset.push(alerts[i].alertDescriptionText) // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
-      // Filteröidään INFO ja NO_EFFECT pois
-      if (alerts[i].alertSeverityLevel === 'INFO' && alerts[i].alertEffect === 'NO_EFFECT') {
-        // Do nothing for now
-      } else {
-        const alertId = alerts[i].id // Poikkeuksen id
-        var alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
-        alertEndDate = Number(alertEndDate) + 3600 // Lisätään poikkeukselle tunti lisää, jotta poikkeus ei katoa liian nopeasti
-        var lahetettavaViesti = poikkeusViestiBuild(alerts[i]) // Viestin rakennus poikkeusViestiBuildissa
-        console.log('[HSL A] ' + alerts[i].alertDescriptionText) // Logataan alert konsoliin
-        // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
-        if (tila === 1) {
-          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
-          const msgId = lahetettyViesti.message_id
-          poikkeusViestiDb(alertId, alerts[i].alertDescriptionText, msgId, alertEndDate)
-          if (alerts[i].alertSeverityLevel === 'SEVERE') {
-            const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
-            console.info('[HSL A Pinned]' + pinned.message_id)
+    if (alerts[i].effectiveStartDate < moment().unix()) {
+      if (poikkeukset.indexOf(alerts[i].alertDescriptionText) === -1) { // Tarkistaa onko poikkeus jo olemassa
+        poikkeukset.push(alerts[i].alertDescriptionText) // Lisää uuden alertin poikkeuksiin, jotta se ei toistu
+        // Filteröidään INFO ja NO_EFFECT pois
+        if (alerts[i].alertSeverityLevel === 'INFO' && alerts[i].alertEffect === 'NO_EFFECT') {
+          // Do nothing for now
+        } else {
+          let alertEndDate = alerts[i].effectiveEndDate // Poikkeuksen effectiveEndDate
+          alertEndDate = Number(alertEndDate) + 3600 // Lisätään poikkeukselle tunti lisää, jotta poikkeus ei katoa liian nopeasti
+          const lahetettavaViesti = poikkeusViestiBuild(alerts[i]) // Viestin rakennus poikkeusViestiBuildissa
+          console.log('[HSL A] ' + alerts[i].alertDescriptionText) // Logataan alert konsoliin
+          // Tarkistetaan function tila, jos tila on '1' lähetetään viesti(t)
+          if (tila === 1) {
+            const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { parse_mode: 'HTML' })
+            const msgId = lahetettyViesti.message_id
+            poikkeusViestiDb(alerts[i].id, alerts[i].alertDescriptionText, msgId, alertEndDate)
+            if (alerts[i].alertSeverityLevel === 'SEVERE') {
+              const pinned = await bot.pinChatMessage(config.poikkeusChannelID, msgId)
+              console.info('[HSL A Pinned]' + pinned.message_id)
+            }
           }
         }
       }
@@ -70,22 +79,7 @@ function poikkeusViestiBuild (alertsi) {
     lahetettavaViesti = '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
   } else {
     var mode = alertsi.route.mode
-    // Lisää viestin alkuun merkin
-    switch (mode) {
-      case 'BUS': lahetettavaViesti = 'Ⓑ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'SUBWAY': lahetettavaViesti = 'Ⓜ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'TRAM': lahetettavaViesti = 'Ⓡ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'RAIL': lahetettavaViesti = 'Ⓙ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'FERRY': lahetettavaViesti = 'Ⓛ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      default:
-        lahetettavaViesti = '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-    }
+    lahetettavaViesti = modes.modeSwitch(mode) + '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
   }
   return lahetettavaViesti
 }
@@ -101,54 +95,56 @@ function poikkeusViestiDb (id, description, msgId, endDate) {
   })
 }
 
-// Alertin päivitys
 async function poikkeusViestiUpdate (alerts) {
-  // var kaikkiPoikkeusViestit = poikkeusViestit.chain().data()
-  const sqlAllRows = 'SELECT * FROM poikkeusviestit'
-  db.all(sqlAllRows, (err, rows) => {
-    if (err) {
-      return console.error(err)
-    } else {
-      for (let y = 0; y < rows.length; y += 1) {
-        for (let x = 0; x < alerts.length; x += 1) {
-          if (rows[y].alert_id === alerts[x].id) {
-            // Jos tietokannan ja queryn alertDescription text eroaa
-            if (rows[y].alert_description !== alerts[x].alertDescriptionText) {
-              // console.log('Not same text, update text')
-              console.log('[HSL A update] <' + rows[y].alert_description + '> to <' + alerts[x].alertDescriptionText + '>')
-              // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
-              poikkeukset.push(alerts[x].alertDescriptionText)
-              // Tekee uuden endDaten
-              var alertEndDate = alerts[x].effectiveEndDate
-              alertEndDate = Number(alertEndDate) + 3600
-              // Rakentaa viestin
-              var editoituViesti = poikkeusViestiBuild(alerts[x])
-              // Muokkaa viestin
-              bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alert_msg_id, parse_mode: 'HTML' })
-              // Päivittää tekstin tietokantaan
-              const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
-              db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alert_msg_id], (err) => {
-                if (err) {
-                  console.error(err)
-                }
-              })
-            } else if (rows[y].alert_end_date !== alerts[x].effectiveEndDate + 3600) {
-              console.debug(typeof rows[y].alert_end_date + ' - ' + typeof alerts[x].effectiveEndDate)
-              console.debug(rows[y].alert_end_date + ' - ' + alerts[x].effectiveEndDate)
-              // Jos tietokannan ja queryn endDate eroaa toisistaan
-              console.log('[HSL A update endDate] ' + alerts[x].alertDescriptionText)
-              const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
-              const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date=? WHERE alert_msg_id=?'
-              db.run(sqlUpdateEnd, [alertEndDate, rows[y].alert_msg_id], (err) => {
-                if (err) {
-                  console.error(err)
-                }
-              })
+  return new Promise((resolve, reject) => {
+    const sqlAllRows = 'SELECT * FROM poikkeusviestit'
+    db.all(sqlAllRows, (err, rows) => {
+      if (err) {
+        console.error(err)
+        reject(err)
+      } else {
+        for (let y = 0; y < rows.length; y += 1) {
+          for (let x = 0; x < alerts.length; x += 1) {
+            if (rows[y].alert_id === alerts[x].id) {
+              // Jos tietokannan ja queryn alertDescription text eroaa
+              if (rows[y].alert_description !== alerts[x].alertDescriptionText) {
+                // console.log('Not same text, update text')
+                console.log('[HSL A update] <' + rows[y].alert_description + '> to <' + alerts[x].alertDescriptionText + '>')
+                // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
+                poikkeukset.push(alerts[x].alertDescriptionText)
+                // Tekee uuden endDaten
+                var alertEndDate = alerts[x].effectiveEndDate
+                alertEndDate = Number(alertEndDate) + 3600
+                // Rakentaa viestin
+                var editoituViesti = poikkeusViestiBuild(alerts[x])
+                // Muokkaa viestin
+                bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alert_msg_id, parse_mode: 'HTML' })
+                // Päivittää tekstin tietokantaan
+                const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
+                db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alert_msg_id], (err) => {
+                  if (err) {
+                    console.error(err)
+                  }
+                })
+              } else if (rows[y].alert_end_date !== alerts[x].effectiveEndDate + 3600) {
+                console.debug(typeof rows[y].alert_end_date + ' - ' + typeof alerts[x].effectiveEndDate)
+                console.debug(rows[y].alert_end_date + ' - ' + alerts[x].effectiveEndDate)
+                // Jos tietokannan ja queryn endDate eroaa toisistaan
+                console.log('[HSL A update endDate] ' + alerts[x].alertDescriptionText)
+                const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
+                const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date=? WHERE alert_msg_id=?'
+                db.run(sqlUpdateEnd, [alertEndDate, rows[y].alert_msg_id], (err) => {
+                  if (err) {
+                    console.error(err)
+                  }
+                })
+              }
             }
           }
         }
       }
-    }
+      resolve()
+    })
   })
 }
 
