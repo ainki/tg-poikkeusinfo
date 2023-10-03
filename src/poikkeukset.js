@@ -114,9 +114,9 @@ async function poikkeusViestiUpdate (alerts) {
           if (rows[y].alert_id === alerts[x].id) {
             console.log()
             // Jos tietokannan ja queryn alertDescription text eroaa
-            if (rows[y].alertDescription !== alerts[x].alertDescriptionText) {
+            if (rows[y].alert_description !== alerts[x].alertDescriptionText) {
               // console.log('Not same text, update text')
-              console.log('[HSL A update] <' + rows[y].alertDescription + '> to <' + alerts[x].alertDescriptionText + '>')
+              console.log('[HSL A update] <' + rows[y].alert_description + '> to <' + alerts[x].alertDescriptionText + '>')
               // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
               poikkeukset.push(alerts[x].alertDescriptionText)
               // Tekee uuden endDaten
@@ -125,20 +125,20 @@ async function poikkeusViestiUpdate (alerts) {
               // Rakentaa viestin
               var editoituViesti = poikkeusViestiBuild(alerts[x])
               // Muokkaa viestin
-              bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alertMessageId, parse_mode: 'HTML' })
+              bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alert_msg_id, parse_mode: 'HTML' })
               // Päivittää tekstin tietokantaan
               const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
-              db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alertMessageId], (err) => {
+              db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alert_msg_id], (err) => {
                 if (err) {
                   console.error(err)
                 }
               })
-            } else if (rows[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
+            } else if (rows[y].alert_end_date !== Number(alerts[x].effectiveEndDate)) {
               // Jos tietokannan ja queryn endDate eroaa toisistaan
               console.log('[HSL A update end] ' + alerts[x].alertDescriptionText)
               const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
               const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date = ? WHERE alert_msg_id = ?'
-              db.run(sqlUpdateEnd, [alertEndDate, rows[y].alertMessageId], (err) => {
+              db.run(sqlUpdateEnd, [alertEndDate, rows[y].alert_msg_id], (err) => {
                 if (err) {
                   console.error(err)
                 }
