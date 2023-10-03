@@ -2,6 +2,7 @@
 
 const bot = require('../bot')
 const config = require('../config')
+const modes = require('./components/modeIcon')
 // paketit
 const { request } = require('graphql-request')
 var moment = require('moment')
@@ -70,22 +71,7 @@ function poikkeusViestiBuild (alertsi) {
     lahetettavaViesti = '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
   } else {
     var mode = alertsi.route.mode
-    // Lisää viestin alkuun merkin
-    switch (mode) {
-      case 'BUS': lahetettavaViesti = 'Ⓑ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'SUBWAY': lahetettavaViesti = 'Ⓜ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'TRAM': lahetettavaViesti = 'Ⓡ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'RAIL': lahetettavaViesti = 'Ⓙ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      case 'FERRY': lahetettavaViesti = 'Ⓛ <b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-      default:
-        lahetettavaViesti = '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
-        break
-    }
+    lahetettavaViesti = modes.modeSwitch(mode) + '<b>' + alertsi.alertHeaderText + '</b>\n' + alertsi.alertDescriptionText
   }
   return lahetettavaViesti
 }

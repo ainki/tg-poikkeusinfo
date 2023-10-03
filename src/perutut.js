@@ -3,6 +3,7 @@
 // Import
 const bot = require('../bot')
 const config = require('../config')
+const modes = require('./components/modeIcon')
 // npm
 const { request } = require('graphql-request')
 const moment = require('moment')
@@ -61,25 +62,8 @@ async function tarkistaPerutut (tila) {
         } else {
           lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
         }
-        // Lisää viestin alkuun merkin jos kulkuneivo tiedossa
         var mode = perututVuorot[i].trip.pattern.route.mode
-        if (perututVuorot[i].trip.pattern.route.mode) {
-          switch (mode) {
-            case 'BUS': lahetettavaViesti = 'Ⓑ ' + lahetettavaViesti
-              break
-            case 'SUBWAY': lahetettavaViesti = 'Ⓜ ' + lahetettavaViesti
-              break
-            case 'TRAM': lahetettavaViesti = 'Ⓡ ' + lahetettavaViesti
-              break
-            case 'RAIL': lahetettavaViesti = 'Ⓙ ' + lahetettavaViesti
-              break
-            case 'FERRY': lahetettavaViesti = 'Ⓛ ' + lahetettavaViesti
-              break
-            default:
-              // lahetettavaViesti = lahetettavaViesti
-              break
-          }
-        }
+        lahetettavaViesti = modes.modeSwitch(mode) + lahetettavaViesti // Lisää viestin alkuun merkin jos kulkuneivo tiedossa, mode switch functiossa
         console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
         // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
         if (tila === 1) {
@@ -106,7 +90,7 @@ function perututVuorotViestiDb (tripId, msgId, effectiveEndDate, messageBody) {
   })
 }
 
-async function perututViestiPoisto () {
+function perututViestiPoisto () {
   // Hakee tietokannasta viestit jotka on vanhempia kuin 3 tuntia
   // SQL query to select rows where the integer column is less than the target value
   const sqlQuery = 'SELECT * FROM perututvuorot WHERE cancel_end_date < ?'
