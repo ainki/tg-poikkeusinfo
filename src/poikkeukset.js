@@ -112,7 +112,6 @@ async function poikkeusViestiUpdate (alerts) {
       for (let y = 0; y < rows.length; y += 1) {
         for (let x = 0; x < alerts.length; x += 1) {
           if (rows[y].alert_id === alerts[x].id) {
-            console.log()
             // Jos tietokannan ja queryn alertDescription text eroaa
             if (rows[y].alert_description !== alerts[x].alertDescriptionText) {
               // console.log('Not same text, update text')
@@ -133,11 +132,13 @@ async function poikkeusViestiUpdate (alerts) {
                   console.error(err)
                 }
               })
-            } else if (rows[y].alert_end_date !== Number(alerts[x].effectiveEndDate)) {
+            } else if (rows[y].alert_end_date !== alerts[x].effectiveEndDate + 3600) {
+              console.debug(typeof rows[y].alert_end_date + ' - ' + typeof alerts[x].effectiveEndDate)
+              console.debug(rows[y].alert_end_date + ' - ' + alerts[x].effectiveEndDate)
               // Jos tietokannan ja queryn endDate eroaa toisistaan
-              console.log('[HSL A update end] ' + alerts[x].alertDescriptionText)
+              console.log('[HSL A update endDate] ' + alerts[x].alertDescriptionText)
               const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
-              const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date = ? WHERE alert_msg_id = ?'
+              const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date=? WHERE alert_msg_id=?'
               db.run(sqlUpdateEnd, [alertEndDate, rows[y].alert_msg_id], (err) => {
                 if (err) {
                   console.error(err)
@@ -186,8 +187,6 @@ async function poikkeusViestiPoisto () {
     }
   })
 }
-
-tarkistaPoikkeukset()
 
 module.exports = {
   tarkistaPoikkeukset,

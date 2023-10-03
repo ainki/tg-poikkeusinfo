@@ -148,8 +148,6 @@ async function perututViestiPoisto () {
   })
 }
 
-tarkistaPerutut()
-
 module.exports = {
   tarkistaPerutut,
   perututViestiPoisto
