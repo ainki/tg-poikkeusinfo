@@ -15,6 +15,9 @@ function consoleStartMessage () {
 consoleStartMessage()
 
 if (config.enablePerutut === true) {
+  // Tarkistaa perutut kun ohjelma käynnistyy
+  poikkeukset.tarkistaPerutut()
+
   // Tarkistaa perutut joka minuutti
   cron.schedule('* * * * *', () => {
     perutut.tarkistaPerutut(1).catch(err => { console.error(err) })
@@ -27,6 +30,9 @@ if (config.enablePerutut === true) {
 }
 
 if (config.enablePoikkeukset === true) {
+  // Tarkistaa poikkeukset kun ohjelma käynnistyy
+  poikkeukset.tarkistaPoikkeukset()
+
   // Tarkistaa poikkeukset joka minuutti
   cron.schedule('* * * * *', () => {
     poikkeukset.tarkistaPoikkeukset(1).catch(err => { console.error(err) })

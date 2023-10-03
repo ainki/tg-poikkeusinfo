@@ -187,8 +187,6 @@ async function poikkeusViestiPoisto () {
   })
 }
 
-tarkistaPoikkeukset()
-
 module.exports = {
   tarkistaPoikkeukset,
   poikkeusViestiPoisto
