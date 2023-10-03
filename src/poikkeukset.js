@@ -108,40 +108,42 @@ async function poikkeusViestiUpdate (alerts) {
   db.all(sqlAllRows, (err, rows) => {
     if (err) {
       return console.error(err)
-    }
-    for (let y = 0; y < rows.length; y += 1) {
-      for (let x = 0; x < alerts.length; x += 1) {
-        if (rows[y].alertId === alerts[x].id) {
-          // Jos tietokannan ja queryn alertDescription text eroaa
-          if (rows[y].alertDescription !== alerts[x].alertDescriptionText) {
-            // console.log('Not same text, update text')
-            console.log('[HSL A update] <' + rows[y].alertDescription + '> to <' + alerts[x].alertDescriptionText + '>')
-            // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
-            poikkeukset.push(alerts[x].alertDescriptionText)
-            // Tekee uuden endDaten
-            var alertEndDate = alerts[x].effectiveEndDate
-            alertEndDate = Number(alertEndDate) + 3600
-            // Rakentaa viestin
-            var editoituViesti = poikkeusViestiBuild(alerts[x])
-            // Muokkaa viestin
-            bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alertMessageId, parse_mode: 'HTML' })
-            // Päivittää tekstin tietokantaan
-            const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
-            db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alertMessageId], (err) => {
-              if (err) {
-                console.error(err)
-              }
-            })
-          } else if (rows[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
-            // Jos tietokannan ja queryn endDate eroaa toisistaan
-            console.log('[HSL A update end] ' + alerts[x].alertDescriptionText)
-            const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
-            const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date = ? WHERE alert_msg_id = ?'
-            db.run(sqlUpdateEnd, [alertEndDate, rows[y].alertMessageId], (err) => {
-              if (err) {
-                console.error(err)
-              }
-            })
+    } else {
+      for (let y = 0; y < rows.length; y += 1) {
+        for (let x = 0; x < alerts.length; x += 1) {
+          if (rows[y].alert_id === alerts[x].id) {
+            console.log()
+            // Jos tietokannan ja queryn alertDescription text eroaa
+            if (rows[y].alertDescription !== alerts[x].alertDescriptionText) {
+              // console.log('Not same text, update text')
+              console.log('[HSL A update] <' + rows[y].alertDescription + '> to <' + alerts[x].alertDescriptionText + '>')
+              // Lisää poikkeuksiin tiedot uudesta tekstistä, jotta ei tulis uutta viestiä
+              poikkeukset.push(alerts[x].alertDescriptionText)
+              // Tekee uuden endDaten
+              var alertEndDate = alerts[x].effectiveEndDate
+              alertEndDate = Number(alertEndDate) + 3600
+              // Rakentaa viestin
+              var editoituViesti = poikkeusViestiBuild(alerts[x])
+              // Muokkaa viestin
+              bot.editMessageText(editoituViesti, { chat_id: config.poikkeusChannelID, message_id: rows[y].alertMessageId, parse_mode: 'HTML' })
+              // Päivittää tekstin tietokantaan
+              const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
+              db.run(sqlUpdateMsg, [alerts[x].alertDescriptionText, alertEndDate, rows[y].alertMessageId], (err) => {
+                if (err) {
+                  console.error(err)
+                }
+              })
+            } else if (rows[y].alertEndDate !== Number(alerts[x].effectiveEndDate)) {
+              // Jos tietokannan ja queryn endDate eroaa toisistaan
+              console.log('[HSL A update end] ' + alerts[x].alertDescriptionText)
+              const alertEndDate = Number(alerts[x].effectiveEndDate) + 3600
+              const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date = ? WHERE alert_msg_id = ?'
+              db.run(sqlUpdateEnd, [alertEndDate, rows[y].alertMessageId], (err) => {
+                if (err) {
+                  console.error(err)
+                }
+              })
+            }
           }
         }
       }
