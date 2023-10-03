@@ -28,8 +28,8 @@ function createDatabase () {
 function createTables (newdb) {
   newdb.run(`
   create table perututvuorot(
-    cancel_trip_id text primary key not null,
-    cancel_msg_id int not null,
+    cancel_trip_id text not null,
+    cancel_msg_id int primary key not null,
     cancel_end_date int not null,
     cancel_message text
   );
@@ -40,8 +40,8 @@ function createTables (newdb) {
   })
   newdb.run(`
   create table poikkeusviestit(
-    alert_id text primary key not null,
-    alert_msg_id int not null,
+    alert_id text not null,
+    alert_msg_id primary key int not null,
     alert_end_date int not null,
     alert_description text
   );
