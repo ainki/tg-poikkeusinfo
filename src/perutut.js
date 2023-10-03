@@ -90,7 +90,7 @@ function perututVuorotViestiDb (tripId, msgId, effectiveEndDate, messageBody) {
   })
 }
 
-function perututViestiPoisto () {
+async function perututViestiPoisto () {
   // Hakee tietokannasta viestit jotka on vanhempia kuin 3 tuntia
   // SQL query to select rows where the integer column is less than the target value
   const sqlQuery = 'SELECT * FROM perututvuorot WHERE cancel_end_date < ?'
