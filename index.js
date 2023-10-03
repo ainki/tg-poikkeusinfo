@@ -16,7 +16,7 @@ consoleStartMessage()
 
 if (config.enablePerutut === true) {
   // Tarkistaa perutut kun ohjelma käynnistyy
-  poikkeukset.tarkistaPerutut()
+  perutut.tarkistaPerutut()
 
   // Tarkistaa perutut joka minuutti
   cron.schedule('* * * * *', () => {
