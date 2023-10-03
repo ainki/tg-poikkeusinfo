@@ -41,7 +41,7 @@ function createTables (newdb) {
   newdb.run(`
   create table poikkeusviestit(
     alert_id text not null,
-    alert_msg_id primary key int not null,
+    alert_msg_id int primary key not null,
     alert_end_date int not null,
     alert_description text
   );
