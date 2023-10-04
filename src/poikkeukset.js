@@ -81,7 +81,7 @@ async function alertViestiUpdate (alerts) {
         rows.forEach((row) => {
           const sameIdAlert = alerts.filter(item => item.id === row.alert_id)
           if (sameIdAlert[0]) {
-            if (!sameIdAlert[0].alertDescriptionText === row.alert_description) {
+            if (!(sameIdAlert[0].alertDescriptionText === row.alert_description)) {
               // Jos alert description on muuttunut
               console.log('[HSL A update] Msg: ' + row.alert_msg_id + ' to ' + sameIdAlert[0].alertDescriptionText)
               const alertEnd = sameIdAlert[0].effectiveEndDate + 3600
@@ -90,13 +90,13 @@ async function alertViestiUpdate (alerts) {
               // Muokkaa viestin
               bot.editMessageText(viesti, { chat_id: config.poikkeusChannelID, message_id: row.alert_msg_id, parse_mode: 'HTML' })
               // Päivitetään tietokantaan description ja end date
-              const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description = ?, alert_end_date = ? WHERE alert_msg_id = ?'
-              db.run(sqlUpdateMsg, [sameIdAlert[0].alertDescriptionText, alertEnd, rows.alert_msg_id], (err) => {
+              const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description=?, alert_end_date=? WHERE alert_msg_id=?'
+              db.run(sqlUpdateMsg, [sameIdAlert[0].alertDescriptionText, alertEnd, row.alert_msg_id], function (err) {
                 if (err) {
                   reject(err)
                 }
               })
-            } else if (!sameIdAlert[0].effectiveEndDate + 3600 === row.alert_end_date) {
+            } else if (!(sameIdAlert[0].effectiveEndDate + 3600 === row.alert_end_date)) {
               // Jos pelkkä end date muuttunut
               console.log('[HSL A update] Msg: ' + row.alert_msg_id + ' alertEnd changed!')
               const alertEnd = sameIdAlert[0].effectiveEndDate + 3600
