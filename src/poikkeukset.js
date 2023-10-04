@@ -35,12 +35,7 @@ async function tarkistaPoikkeukset (tila) {
   const alerts = data.alerts
   // Päivitetään ennen uusia
   try {
-<<<<<<< Updated upstream
-    await poikkeusViestiUpdate(alerts)
-    newAlert(alerts)
-=======
     await alertViestiUpdate(alerts)
->>>>>>> Stashed changes
   } catch (error) {
     console.error(error)
   }
