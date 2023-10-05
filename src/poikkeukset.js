@@ -35,7 +35,7 @@ async function tarkistaPoikkeukset (tila) {
   const alerts = data.alerts
   // Päivitetään ennen uusia
   try {
-    await alertViestiUpdate(alerts)
+    await poikkeusViestiUpdate(alerts)
   } catch (error) {
     console.error(error)
   }
