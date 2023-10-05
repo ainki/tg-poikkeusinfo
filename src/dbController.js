@@ -44,7 +44,6 @@ function createTables (newdb) {
     alert_msg_id int primary key not null,
     alert_end_date int not null,
     alert_description text
-    alert_modes text
   );
   `, (err) => {
     if (err) {
