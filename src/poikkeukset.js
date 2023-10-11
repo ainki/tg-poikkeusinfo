@@ -109,7 +109,7 @@ async function alertViestiUpdate (alerts) {
             }
           } else {
             // Jos alerttia ei löydy querystä, poistetaan alertti
-            console.log('[HSL A update] deleting: ' + row.alert_description)
+            console.log('[HSL A update delete] ' + row.alert_description)
             bot.deleteMessage(config.poikkeusChannelID, row.alert_msg_id).then(re => {
               const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
               db.run(removeSQL, [row.alert_msg_id], (err) => {
@@ -118,6 +118,20 @@ async function alertViestiUpdate (alerts) {
                 }
               })
             })
+              .catch(err => {
+                // console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
+                if (err.response.body.error_code === 400) {
+                  console.log('[HSL A update delete] failed to delete, msg too old: ' + row.alert_description)
+                  const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
+                  db.run(removeSQL, [row.alert_msg_id], (err) => {
+                    if (err) {
+                      reject(err)
+                    }
+                  })
+                } else {
+                  console.error(err)
+                }
+              })
           }
         })
       }
