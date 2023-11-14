@@ -8,6 +8,8 @@ ARG digitransitApiKey
 ENV digitransitApiKey=${digitransitApiKey}
 ARG channelId
 ENV channelId=${channelId}
+ARG dataPath
+ENV dataPath=${dataPath}
 
 WORKDIR /app
 COPY . ./
