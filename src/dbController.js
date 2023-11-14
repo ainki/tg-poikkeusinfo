@@ -1,5 +1,9 @@
 const sqlite3 = require('sqlite3').verbose()
-const filepath = './data/poikkeukset.sqlite'
+let filepath = './data/poikkeukset.sqlite'
+
+if (process.env.dataPath) {
+  filepath = process.env.dataPath
+}
 
 // Init database
 const db = new sqlite3.Database(filepath, sqlite3.OPEN_READWRITE, (err) => {
