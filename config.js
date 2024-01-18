@@ -5,7 +5,7 @@ module.exports = {
   enablePolling: false, // Polling päälle/pois
   enableDebug: true,
   // API
-  digitransitAPILink: 'http://api.digitransit.fi/routing/v1/routers/hsl/index/graphql?digitransit-subscription-key=' + process.env.digitransitApiKey,
+  digitransitAPILink: 'https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql?digitransit-subscription-key=' + process.env.digitransitApiKey,
   // Telegram channels
   poikkeusChannelID: process.env.channelId
 }
