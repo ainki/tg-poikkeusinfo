@@ -49,7 +49,7 @@ async function tarkistaPerutut (tila) {
       var departureTimeNum = Number(perututVuorot[i].scheduledDeparture)
       var serviceDayNum = Number(perututVuorot[i].serviceDay)
 
-      var alertEndDate = departureTimeNum + 7200 + serviceDayNum // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
+      var alertEndDate = departureTimeNum + 5400 + serviceDayNum // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
       // var alertEndDate = departureTimeNum + 180 + serviceDayNum // Kolme minuuttia (testausta varten)
       // Tarkistaa onko peruttu vuoro relevantti enään
       if (alertEndDate > moment().unix()) {
@@ -91,7 +91,6 @@ function perututVuorotViestiDb (tripId, msgId, effectiveEndDate, messageBody) {
 }
 
 async function perututViestiPoisto () {
-  // Hakee tietokannasta viestit jotka on vanhempia kuin 3 tuntia
   // SQL query to select rows where the integer column is less than the target value
   const sqlQuery = 'SELECT * FROM perututvuorot WHERE cancel_end_date < ?'
   db.all(sqlQuery, moment().unix(), (err, rows) => {
