@@ -114,7 +114,7 @@ async function perututViestiPoisto () {
         }).catch(err => {
           console.error('[HSL C del] TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description + ' | ' + row.alert_msg_id)
           if (err.response.body.error_code === 400) {
-            console.log('[HSL C del] Message cannot "' + row.cancel_message + '" be found, deleting from database')
+            console.log('[HSL C del] Message "' + row.cancel_message + '" cannot be found, deleting from database')
             const removeSQL = 'DELETE FROM perututvuorot WHERE cancel_message = ?'
             db.run(removeSQL, row.cancel_message, (err) => {
               if (err) {
