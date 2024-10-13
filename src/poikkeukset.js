@@ -182,7 +182,7 @@ async function poikkeusViestiPoisto () {
             }
           })
         }).catch(err => {
-          console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description + ' | ' + row.alert_msg_id)
+          console.error('[HSL A del] TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description + ' | ' + row.alert_msg_id)
           console.log(err.response.body.description === 'Bad Request: message to delete not found')
           console.log(err.response.body.error_code === 400)
           if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
