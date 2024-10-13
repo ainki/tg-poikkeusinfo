@@ -182,7 +182,9 @@ async function poikkeusViestiPoisto () {
             }
           })
         }).catch(err => {
-          console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
+          console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description + ' | ' + row.alert_msg_id)
+          console.log(err.response.body.description === 'Bad Request: message to delete not found')
+          console.log(err.response.body.error_code === 400)
           if (err.response.body.description === 'Bad Request: message to delete not found' && err.response.body.error_code === 400) {
             console.log('[HSL A del] Message "' + row.alert_description + '" cannot be found, deleting from database')
             const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
