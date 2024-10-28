@@ -77,6 +77,9 @@ async function tarkistaPerutut (tila) {
       }
     }
   }
+  if (tila !== 1) {
+    console.info('[HSL C INIT] Perutut tarkistettu')
+  }
 }
 
 function perututVuorotViestiDb (tripId, msgId, effectiveEndDate, messageBody) {

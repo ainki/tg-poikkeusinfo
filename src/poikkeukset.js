@@ -69,6 +69,9 @@ async function newAlert (alerts, tila) {
       // }
     }
   }
+  if (tila !== 1) {
+    console.info('[HSL A INIT] Poikkeukset tarkistettu')
+  }
 }
 
 async function alertViestiUpdate (alerts) {
