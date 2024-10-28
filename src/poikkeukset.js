@@ -108,16 +108,25 @@ async function alertViestiUpdate (alerts) {
               })
             }
           } else {
-            // Jos alerttia ei löydy querystä, poistetaan alertti
-            console.log('[HSL A update delete] ' + row.alert_description)
-            bot.deleteMessage(config.poikkeusChannelID, row.alert_msg_id).then(re => {
-              const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
-              db.run(removeSQL, [row.alert_msg_id], (err) => {
-                if (err) {
-                  reject(err)
-                }
-              })
+            // Jos alerttia ei löydy querystä, lisätään nykyhetkeen 1h jolloin se katoaa tunnin jälkeen
+            const alertEnd = moment().unix() + 3600
+            console.log('[HSL A update ended] ' + row.alert_description)
+            const sqlUpdateEnd = 'UPDATE poikkeusviestit SET alert_end_date=? WHERE alert_msg_id=?'
+            db.run(sqlUpdateEnd, [alertEnd, row.alert_msg_id], (err) => {
+              if (err) {
+                reject(err)
+              }
             })
+            // Jos alerttia ei löydy querystä, poistetaan alertti
+            // console.log('[HSL A update delete] ' + row.alert_description)
+            // bot.deleteMessage(config.poikkeusChannelID, row.alert_msg_id).then(re => {
+            //   const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
+            //   db.run(removeSQL, [row.alert_msg_id], (err) => {
+            //     if (err) {
+            //       reject(err)
+            //     }
+            //   })
+            // })
               .catch(err => {
                 // console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
                 if (err.response.body.error_code === 400) {
