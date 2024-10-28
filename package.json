@@ -1,6 +1,6 @@
 {
   "name": "tg-poikkeusinfo",
-  "version": "0.3.2b",
+  "version": "0.3.3",
   "description": "HSL Liikennehäiriöt ja perutut vuorot Telegram-kanavalle",
   "main": "index.js",
   "scripts": {
@@ -18,20 +18,13 @@
   },
   "homepage": "https://github.com/ainki/ainki-tg-poikkeusinfo#readme",
   "dependencies": {
-    "console-stamp": "^3.1.1",
-    "dotenv": "^16.0.3",
-    "graphql": "^15.5.1",
-    "graphql-request": "^5.2.0",
-    "moment": "^2.29.3",
-    "node-cron": "^3.0.2",
-    "node-telegram-bot-api": "^0.61.0",
-    "sqlite3": "^5.1.6"
-  },
-  "devDependencies": {
-    "eslint": "^8.38.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-n": "^15.7.0",
-    "eslint-plugin-promise": "^6.1.1"
+    "console-stamp": "^3.1.2",
+    "dotenv": "^16.4.5",
+    "graphql": "^16.9.0",
+    "graphql-request": "^7.1.0",
+    "moment": "^2.30.1",
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.66.0",
+    "sqlite3": "^5.1.7"
   }
 }
