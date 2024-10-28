@@ -130,20 +130,20 @@ async function alertViestiUpdate (alerts) {
             //     }
             //   })
             // })
-              .catch(err => {
-                // console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
-                if (err.response.body.error_code === 400) {
-                  console.log('[HSL A update delete] failed to delete, msg too old: ' + row.alert_description)
-                  const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
-                  db.run(removeSQL, [row.alert_msg_id], (err) => {
-                    if (err) {
-                      reject(err)
-                    }
-                  })
-                } else {
-                  console.error(err)
-                }
-              })
+              // .catch(err => {
+              //   // console.error('TELEGRAM: ' + err.response.body.error_code + ' ' + err.response.body.description)
+              //   if (err.response.body.error_code === 400) {
+              //     console.log('[HSL A update delete] failed to delete, msg too old: ' + row.alert_description)
+              //     const removeSQL = 'DELETE FROM poikkeusviestit WHERE alert_msg_id = ?'
+              //     db.run(removeSQL, [row.alert_msg_id], (err) => {
+              //       if (err) {
+              //         reject(err)
+              //       }
+              //     })
+              //   } else {
+              //     console.error(err)
+              //   }
+              // })
           }
         })
       }
