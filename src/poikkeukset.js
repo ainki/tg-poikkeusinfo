@@ -59,7 +59,7 @@ async function newAlert (alerts, tila) {
             const viesti = alertMessageBuild(alerts[i], sameDescAlerts)
             const sentViesti = await bot.sendMessage(config.poikkeusChannelID, viesti, { parse_mode: 'HTML', disable_notification: alerts.alertSeverityLevel !== 'SEVERE' })
             const viestiId = sentViesti.message_id
-            poikkeusViestiDb(alerts[i].id, alerts[i].alertDescriptionText, viestiId, alertEnd)
+            poikkeusViestiDb(alerts[i].id, alerts[i].alertDescriptionText, viestiId, alertEnd, alerts[i].alertHeaderText)
             if (alerts[i].alertSeverityLevel === 'SEVERE') {
               const pinned = await bot.pinChatMessage(config.poikkeusChannelID, viestiId)
               console.info('[HSL A Pinned]' + pinned.message_id)
@@ -81,17 +81,17 @@ async function alertViestiUpdate (alerts) {
         rows.forEach((row) => {
           const sameIdAlert = alerts.filter(item => item.id === row.alert_id)
           if (sameIdAlert[0]) {
-            if (!(sameIdAlert[0].alertDescriptionText === row.alert_description)) {
+            if (!(sameIdAlert[0].alertDescriptionText === row.alert_description || sameIdAlert[0].alertHeaderText === row.alert_header)) {
               // Jos alert description on muuttunut
-              console.log('[HSL A update] Msg: ' + row.alert_msg_id + ' to ' + sameIdAlert[0].alertDescriptionText)
+              console.log('[HSL A update] Msg: ' + row.alert_msg_id + ' to ' + sameIdAlert[0].alertHeaderText)
               const alertEnd = sameIdAlert[0].effectiveEndDate + 3600
               const sameDescAlerts = alerts.filter(item => item.alertDescriptionText === sameIdAlert[0].alertDescriptionText)
               const viesti = alertMessageBuild(sameIdAlert[0], sameDescAlerts)
               // Muokkaa viestin
               bot.editMessageText(viesti, { chat_id: config.poikkeusChannelID, message_id: row.alert_msg_id, parse_mode: 'HTML' })
               // Päivitetään tietokantaan description ja end date
-              const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description=?, alert_end_date=? WHERE alert_msg_id=?'
-              db.run(sqlUpdateMsg, [sameIdAlert[0].alertDescriptionText, alertEnd, row.alert_msg_id], function (err) {
+              const sqlUpdateMsg = 'UPDATE poikkeusviestit SET alert_description=?, alert_end_date=?, alert_header=? WHERE alert_msg_id=?'
+              db.run(sqlUpdateMsg, [sameIdAlert[0].alertDescriptionText, alertEnd, sameIdAlert[0].alertHeaderText, row.alert_msg_id], function (err) {
                 if (err) {
                   reject(err)
                 }
@@ -162,9 +162,9 @@ function alertMessageBuild (alertsi, sameDescAlerts) {
   return viesti
 }
 
-function poikkeusViestiDb (id, description, msgId, endDate) {
-  const insertSQL = 'INSERT INTO poikkeusviestit (alert_id, alert_msg_id, alert_end_date, alert_description) VALUES (?, ?, ?, ?)'
-  db.run(insertSQL, [id, msgId, endDate, description], (err) => {
+function poikkeusViestiDb (id, description, msgId, endDate, header) {
+  const insertSQL = 'INSERT INTO poikkeusviestit (alert_id, alert_msg_id, alert_end_date, alert_header, alert_description) VALUES (?, ?, ?, ?, ?)'
+  db.run(insertSQL, [id, msgId, endDate, header, description], (err) => {
     if (err) {
       console.error(err)
     } else {
