@@ -45,7 +45,7 @@ async function tarkistaPoikkeukset (tila) {
 async function newAlert (alerts, tila) {
   for (let i = 0; i < alerts.length; i += 1) { // Menee jokaisen poikkeuksen läpi
     if (alerts[i].effectiveStartDate < moment().unix()) { // Tarkistaa poikkeuksen vaikutausaikan
-      if (!(alerts[i].alertSeverityLevel === 'INFO' && alerts[i].alertEffect === 'NO_EFFECT')) { // Filteröidään info ja no effect pois
+      // if (!(alerts[i].alertSeverityLevel === 'INFO' && alerts[i].alertEffect === 'NO_EFFECT')) { // Filteröidään info ja no effect pois
         if (!(poikkeukset.some(item => item.id === alerts[i].id) || poikkeukset.some(item => item.desc === alerts[i].alertDescriptionText))) { // Tarkistaa onko poikkeus jo olemassa
           const sameDescAlerts = alerts.filter(item => item.alertDescriptionText === alerts[i].alertDescriptionText)
           // Lisää uudet poikkeukset poikkeuksiin, jotta se ei toistu (samalla descriptionilla saattaa olla monia alertteja koska jokainen linja jota vaikuttaa on oma id)
@@ -66,7 +66,7 @@ async function newAlert (alerts, tila) {
             }
           }
         }
-      }
+      // }
     }
   }
 }
