@@ -67,7 +67,7 @@ async function tarkistaPerutut (tila) {
         console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
         // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
         if (tila === 1) {
-          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti)
+          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { disable_notification: true })
           const msgId = lahetettyViesti.message_id
           if (config.enableDebug === true) {
             // console.debug(lahetettyViesti)

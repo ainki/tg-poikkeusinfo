@@ -57,7 +57,7 @@ async function newAlert (alerts, tila) {
           if (tila === 1) {
             const alertEnd = alerts[i].effectiveEndDate + 3600
             const viesti = alertMessageBuild(alerts[i], sameDescAlerts)
-            const sentViesti = await bot.sendMessage(config.poikkeusChannelID, viesti, { parse_mode: 'HTML' })
+            const sentViesti = await bot.sendMessage(config.poikkeusChannelID, viesti, { parse_mode: 'HTML', disable_notification: alerts.alertSeverityLevel !== 'SEVERE' })
             const viestiId = sentViesti.message_id
             poikkeusViestiDb(alerts[i].id, alerts[i].alertDescriptionText, viestiId, alertEnd)
             if (alerts[i].alertSeverityLevel === 'SEVERE') {
