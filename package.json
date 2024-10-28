@@ -21,7 +21,7 @@
     "console-stamp": "^3.1.2",
     "dotenv": "^16.4.5",
     "graphql": "^16.9.0",
-    "graphql-request": "^7.1.0",
+    "graphql-request": "^5.2.0",
     "moment": "^2.30.1",
     "node-cron": "^3.0.3",
     "node-telegram-bot-api": "^0.66.0",
