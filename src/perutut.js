@@ -68,11 +68,10 @@ async function tarkistaPerutut (tila) {
           let lahetettavaViesti
   
           // Vuoron perumisen päivämäärä
-          console.log(vuoroNode.serviceDay)
-          if (moment.unix(Number(vuoroNode.serviceDay) + departureTimeNum).format('L') === moment().format('L')) {
-            lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
+          if (moment.unix(Number(serviceDayUnix) + departureTimeNum).format('L') === moment().format('L')) {
+            lahetettavaViesti = vuoroNode.trip.routeShortName + ' ' + vuoroNode.trip.tripHeadsign + ' klo ' + moment.unix(Number(serviceDayUnix) + departureTimeNum).format('HH:mm') + ' on peruttu'
           } else {
-            lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
+            lahetettavaViesti = vuoroNode.trip.routeShortName + ' ' + vuoroNode.trip.tripHeadsign + ' ' + moment.unix(Number(serviceDayUnix) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(serviceDayUnix) + departureTimeNum).format('HH:mm') + ' on peruttu'
           }
           var mode = vuoroNode.trip.pattern.route.mode
           lahetettavaViesti = modes.modeSwitch(mode) + lahetettavaViesti // Lisää viestin alkuun merkin jos kulkuneivo tiedossa, mode switch functiossa
