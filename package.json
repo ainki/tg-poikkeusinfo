@@ -1,6 +1,6 @@
 {
   "name": "tg-poikkeusinfo",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "HSL Liikennehäiriöt ja perutut vuorot Telegram-kanavalle",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "graphql-request": "^5.2.0",
     "moment": "^2.30.1",
     "node-cron": "^3.0.3",
-    "node-telegram-bot-api": "^0.66.0",
+    "node-telegram-bot-api": "^0.63.0",
     "sqlite3": "^5.1.7"
   }
 }
