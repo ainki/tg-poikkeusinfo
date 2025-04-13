@@ -17,65 +17,78 @@ const listaPerutuista = []
 async function tarkistaPerutut (tila) {
   // graphQL hakulause
   const query = `{
-    cancelledTripTimes {
-      scheduledDeparture
-      realtimeState
-      headsign
-      serviceDay
-      trip {
-        routeShortName
-        tripHeadsign
-        id
-        pattern {
-          route {
-          mode
+  canceledTrips(first: 500) {
+    edges {
+      node {
+        serviceDate
+        trip {
+          departureStoptime {
+            realtimeState
+            scheduledDeparture
+            serviceDay
+          }
+          routeShortName
+          tripHeadsign
+          id
+          pattern {
+            route {
+              mode
+            }
+          }
         }
       }
     }
-    }
-  }`
+  }
+}`
 
   const data = await request(config.digitransitAPILink, query)
   // Datan käsittely
-  const perututVuorot = data.cancelledTripTimes
+  const perututVuorot = data.canceledTrips.edges
   // Käy läpi jokaisen perutun vuoron
-  for (let i = 0; i < perututVuorot.length; i += 1) {
-    // Tarkistaa onko peruttu vuoro jo olemassa
-    if (listaPerutuista.indexOf(perututVuorot[i].trip.id) === -1) {
-      var tripId = perututVuorot[i].trip.id
-      // Lisää uuden perutun peruttuihin, jotta se ei toistu
-      listaPerutuista.push(perututVuorot[i].trip.id)
-      // Ajan käsittely
-      var departureTimeNum = Number(perututVuorot[i].scheduledDeparture)
-      var serviceDayNum = Number(perututVuorot[i].serviceDay)
-
-      var alertEndDate = departureTimeNum + 4500 + serviceDayNum // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
-      // var alertEndDate = departureTimeNum + 180 + serviceDayNum // Kolme minuuttia (testausta varten)
-      // Tarkistaa onko peruttu vuoro relevantti enään
-      if (alertEndDate > moment().unix()) {
-        // Viesti
-        let lahetettavaViesti
-
-        // Vuoron perumisen päivämäärä
-        if (moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') === moment().format('L')) {
-          lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
-        } else {
-          lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
-        }
-        var mode = perututVuorot[i].trip.pattern.route.mode
-        lahetettavaViesti = modes.modeSwitch(mode) + lahetettavaViesti // Lisää viestin alkuun merkin jos kulkuneivo tiedossa, mode switch functiossa
-        console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
-        // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
-        if (tila === 1) {
-          const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { disable_notification: true })
-          const msgId = lahetettyViesti.message_id
-          if (config.enableDebug === true) {
-            // console.debug(lahetettyViesti)
+  if (perututVuorot.length === 0) {
+    console.log('[HSL C] Ei peruttuja vuoroja')
+    return
+  } else {
+    perututVuorot.forEach(async (peruttuVuoro) => {
+      const vuoroNode = peruttuVuoro.node
+      // Tarkistaa onko peruttu vuoro jo olemassa
+      if (listaPerutuista.indexOf(vuoroNode.trip.id) === -1) {
+        let tripId = vuoroNode.trip.id
+        // Lisää uuden perutun peruttuihin, jotta se ei toistu
+        listaPerutuista.push(vuoroNode.trip.id)
+        // Ajan käsittely
+        const departureTimeNum = Number(vuoroNode.trip.departureStoptime.scheduledDeparture)
+        const serviceDayUnix = moment(vuoroNode.serviceDate, 'YYYY-MM-DD').unix();
+  
+        const alertEndDate = departureTimeNum + 4500 + serviceDayUnix // Lisää kaksi tuntia lähtöajan päälle tietokantaa varten
+        // var alertEndDate = departureTimeNum + 180 + serviceDayNum // Kolme minuuttia (testausta varten)
+        // Tarkistaa onko peruttu vuoro relevantti enään
+        if (alertEndDate > moment().unix()) {
+          // Viesti
+          let lahetettavaViesti
+  
+          // Vuoron perumisen päivämäärä
+          console.log(vuoroNode.serviceDay)
+          if (moment.unix(Number(vuoroNode.serviceDay) + departureTimeNum).format('L') === moment().format('L')) {
+            lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
+          } else {
+            lahetettavaViesti = perututVuorot[i].trip.routeShortName + ' ' + perututVuorot[i].trip.tripHeadsign + ' ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('L') + ' klo ' + moment.unix(Number(perututVuorot[i].serviceDay) + departureTimeNum).format('HH:mm') + ' on peruttu'
           }
-          await perututVuorotViestiDb(tripId, msgId, alertEndDate, lahetettavaViesti)
+          var mode = vuoroNode.trip.pattern.route.mode
+          lahetettavaViesti = modes.modeSwitch(mode) + lahetettavaViesti // Lisää viestin alkuun merkin jos kulkuneivo tiedossa, mode switch functiossa
+          console.log('[HSL C] ' + lahetettavaViesti) // Logataan alert konsoliin
+          // Tarkistetaan onko ensimmäinen haku, vaikuttaa viestien lähettämiseen
+          if (tila === 1) {
+            const lahetettyViesti = await bot.sendMessage(config.poikkeusChannelID, lahetettavaViesti, { disable_notification: true })
+            const msgId = lahetettyViesti.message_id
+            if (config.enableDebug === true) {
+              // console.debug(lahetettyViesti)
+            }
+            await perututVuorotViestiDb(tripId, msgId, alertEndDate, lahetettavaViesti)
+          }
         }
       }
-    }
+    })
   }
   if (tila !== 1) {
     console.info('[HSL C INIT] Perutut tarkistettu')
