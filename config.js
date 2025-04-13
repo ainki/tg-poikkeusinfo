@@ -1,11 +1,8 @@
 module.exports = {
-  // Modules
-  enablePerutut: true, // Perutut vuorot päälle/pois
-  enablePoikkeukset: true, // Poikkeusinfo päälle/pois
-  enablePolling: false, // Polling päälle/pois
+  enablePerutut: true,
+  enablePoikkeukset: true,
+  enablePolling: false,
   enableDebug: true,
-  // API
-  digitransitAPILink: 'https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql?digitransit-subscription-key=' + process.env.digitransitApiKey,
-  // Telegram channels
+  digitransitAPILink: `https://api.digitransit.fi/routing/v2/hsl/gtfs/v1?digitransit-subscription-key=${process.env.digitransitApiKey}`,
   poikkeusChannelID: process.env.channelId
-}
+};
