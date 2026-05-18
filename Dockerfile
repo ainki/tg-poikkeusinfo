@@ -1,4 +1,4 @@
-FROM node:20.18.0-alpine
+FROM node:24.15.0-alpine
 
 ARG token
 ENV token=${token}
