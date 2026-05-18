@@ -14,6 +14,8 @@ ENV dataPath=${dataPath}
 WORKDIR /app
 COPY . ./
 
-RUN npm install
+RUN corepack enable
 
-CMD ["npm", "start"]
+RUN pnpm install --recursive
+
+CMD ["pnpm", "start"]
