@@ -18,4 +18,4 @@ RUN corepack enable
 
 RUN pnpm install --recursive
 
-CMD ["pnpm", "start"]
+CMD ["node", "index.js"]
